@@ -181,19 +181,19 @@ export class ApiWrapper {
     }
   }
 
-  // async at(blockHash: string | BlockHash) : any {
-  //   let registryDefinition : any;
-  //   switch (this.blockChain) {
-  //     case 'algorand':
-  //       break;
-  //     case 'polkadot':
-  //       registryDefinition = this.client.registry.getDefinition(type);
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  //   return registryDefinition;
-  // }
+  async at(blockHash: string | BlockHash): Promise<any> {
+    let clientAt: any;
+    switch (this.blockChain) {
+      case 'algorand':
+        break;
+      case 'polkadot':
+        clientAt = await this.client.at(blockHash);
+        break;
+      default:
+        break;
+    }
+    return clientAt;
+  }
 
   getRegistryDefinition(type: string): any {
     let registryDefinition: any;
