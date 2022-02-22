@@ -420,7 +420,7 @@ export class IndexerManager {
       if (isCustomDs(ds)) {
         return this.dsProcessorService
           .getDsProcessor(ds)
-          .dsFilterProcessor(ds, this.api);
+          .dsFilterProcessor(ds, this.api.client);
       } else {
         return true;
       }
@@ -508,7 +508,9 @@ export class IndexerManager {
       const transformedData = await Promise.all(
         filteredData
           .filter((data) => processor.filterProcessor(handler.filter, data, ds))
-          .map((data) => processor.transformer(data, ds, this.api, assets)),
+          .map((data) =>
+            processor.transformer(data, ds, this.api.client, assets),
+          ),
       );
 
       for (const data of transformedData) {

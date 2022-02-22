@@ -12,6 +12,9 @@ import {
 
 export class ApiWrapper {
   client: ApiPromise; // algosdk.Algodv2 | ApiPromise;
+  query: any;
+  consts: any;
+  rpc: any;
 
   constructor(private blockChain: string, private options: any | ApiOptions) {}
 
@@ -21,6 +24,9 @@ export class ApiWrapper {
         break;
       case 'polkadot':
         this.client = await ApiPromise.create(this.options);
+        this.query = this.client.query;
+        this.consts = this.client.consts;
+        this.rpc = this.client.rpc;
         break;
       default:
         break;
