@@ -203,7 +203,7 @@ export class ApiWrapper {
           bufferBlocks.map(async (round) => this.getBlockByHeight(round)),
         );
       case 'polkadot':
-        return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer);
+        return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer); // TODO: get direct access instead of sending function in params
       default:
         return null;
     }
