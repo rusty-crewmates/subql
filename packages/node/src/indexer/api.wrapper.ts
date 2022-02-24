@@ -174,23 +174,6 @@ export class ApiWrapper {
     return lastHeight;
   }
 
-  async getBlockByHeight(height: number): Promise<SignedBlock | AlgorandBlock> {
-    let block: SignedBlock | AlgorandBlock;
-    let blockHash: BlockHash;
-    switch (this.network) {
-      case 'algorand':
-        block = (await this.algorand.client.block(height).do()).block;
-        break;
-      case 'polkadot':
-        blockHash = await this.substrate.rpc.chain.getBlockHash(height);
-        block = await this.substrate.rpc.chain.getBlock(blockHash);
-        break;
-      default:
-        break;
-    }
-    return block;
-  }
-
   async fetchBlocksArray(
     bufferBlocks: number[],
     fetchForPolkadot: (
@@ -203,7 +186,10 @@ export class ApiWrapper {
     switch (this.network) {
       case 'algorand':
         return Promise.all(
-          bufferBlocks.map(async (round) => this.getBlockByHeight(round)),
+          bufferBlocks.map(
+            async (round) =>
+              (await this.algorand.client.block(round).do()).block,
+          ),
         );
       case 'polkadot':
         return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer);
