@@ -3,11 +3,7 @@
 
 import { ApiPromise } from '@polkadot/api';
 import { ApiInterfaceEvents, ApiOptions } from '@polkadot/api/types';
-import {
-  BlockHash,
-  SignedBlock,
-  RuntimeVersion,
-} from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
 import algosdk from 'algosdk';
 import { BlockContent } from './types';
 import { AlgorandBlock, AlgorandApi } from './typesAlgo';
