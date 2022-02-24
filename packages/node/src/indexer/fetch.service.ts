@@ -301,7 +301,6 @@ export class FetchService implements OnApplicationShutdown {
     }
     try {
       const currentBestHeight = await this.api.getLastHeight();
-      console.log(currentBestHeight);
       if (this.latestBestHeight !== currentBestHeight) {
         this.latestBestHeight = currentBestHeight;
         this.eventEmitter.emit(IndexerEvent.BlockBest, {
@@ -414,17 +413,17 @@ export class FetchService implements OnApplicationShutdown {
       const metadataChanged = await this.fetchMeta(
         bufferBlocks[bufferBlocks.length - 1],
       );
-      const blocks = await fetchBlocksBatches(
-        this.api,
-        bufferBlocks,
-        metadataChanged ? undefined : this.parentSpecVersion,
-      );
+      // const blocks = await fetchBlocksBatches(
+      //   this.api,
+      //   bufferBlocks,
+      //   metadataChanged ? undefined : this.parentSpecVersion,
+      // );
       logger.info(
         `fetch block [${bufferBlocks[0]},${
           bufferBlocks[bufferBlocks.length - 1]
         }], total ${bufferBlocks.length} blocks`,
       );
-      this.blockBuffer.putAll(blocks);
+      // this.blockBuffer.putAll(blocks);
       this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
         value: this.blockBuffer.size,
       });
@@ -434,10 +433,10 @@ export class FetchService implements OnApplicationShutdown {
   @profiler(argv.profiler)
   async fetchMeta(height: number): Promise<boolean> {
     // This function only make sense for Substrate base chain
+
     if (this.project.network !== 'polkadot') {
       return false;
     }
-
     const parentBlockHash = await this.api.rpc.chain.getBlockHash(
       Math.max(height - 1, 0),
     );

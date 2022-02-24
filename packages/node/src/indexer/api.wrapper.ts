@@ -14,7 +14,7 @@ import AlgorandHeader from 'algosdk/dist/types/src/types/blockHeader';
 
 type AlgorandRessouces = {
   client: algosdk.Algodv2;
-  lastHeader: AlgorandHeader;
+  lastHeader: any; //Record<string, Buffer | number | string>;
 };
 
 export class ApiWrapper {
@@ -29,6 +29,10 @@ export class ApiWrapper {
   async init(): Promise<void> {
     switch (this.network) {
       case 'algorand':
+        this.algorand = {
+          client: null,
+          lastHeader: null,
+        };
         this.algorand.client = new algosdk.Algodv2(
           this.options.token,
           this.options.server,
@@ -55,7 +59,7 @@ export class ApiWrapper {
     let genesisHash: string;
     switch (this.network) {
       case 'algorand':
-        genesisHash = this.algorand.lastHeader.gh;
+        genesisHash = this.algorand.lastHeader.gh.toString('hex');
         break;
       case 'polkadot':
         genesisHash = this.substrate.genesisHash.toString();
@@ -70,7 +74,7 @@ export class ApiWrapper {
     let runtimeChain: string;
     switch (this.network) {
       case 'algorand':
-        runtimeChain = this.algorand.lastHeader.gen;
+        runtimeChain = this.algorand.lastHeader.gen as string;
         break;
       case 'polkadot':
         runtimeChain = this.substrate.runtimeChain.toString();

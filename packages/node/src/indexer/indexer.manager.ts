@@ -164,6 +164,7 @@ export class IndexerManager {
         }
       }
     } catch (e) {
+      logger.error('HERE IS THE ERROR I AM SEARCHING FOR');
       await tx.rollback();
       throw e;
     }
