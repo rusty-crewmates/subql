@@ -7,19 +7,14 @@ import {
   BlockHash,
   SignedBlock,
   RuntimeVersion,
-  Header as SubstrateHeader,
 } from '@polkadot/types/interfaces';
-import algosdk, { Transaction } from 'algosdk';
-import AlgorandHeader from 'algosdk/dist/types/src/types/blockHeader';
-
-type AlgorandRessouces = {
-  client: algosdk.Algodv2;
-  lastHeader: any; //Record<string, Buffer | number | string>;
-};
+import algosdk from 'algosdk';
+import { BlockContent } from './types';
+import { AlgorandBlock, AlgorandApi } from './typesAlgo';
 
 export class ApiWrapper {
   substrate: ApiPromise;
-  algorand: AlgorandRessouces;
+  algorand: AlgorandApi;
   query: any;
   consts: any;
   rpc: any;
@@ -177,5 +172,40 @@ export class ApiWrapper {
         break;
     }
     return lastHeight;
+  }
+
+  async getBlockByHeight(height: number): Promise<SignedBlock | AlgorandBlock> {
+    let block: SignedBlock | AlgorandBlock;
+    switch (this.network) {
+      case 'algorand':
+        block = (await this.algorand.client.block(height).do()).block;
+        break;
+      case 'polkadot':
+        break;
+      default:
+        break;
+    }
+    return block;
+  }
+
+  async fetchBlocksArray(
+    bufferBlocks: number[],
+    fetchForPolkadot: (
+      a: ApiPromise,
+      b: number[],
+      c: number,
+    ) => Promise<BlockContent[]>,
+    overallSpecVer?: number,
+  ): Promise<AlgorandBlock | BlockContent[]> {
+    switch (this.network) {
+      case 'algorand':
+        return Promise.all(
+          bufferBlocks.map(async (round) => this.getBlockByHeight(round)),
+        );
+      case 'polkadot':
+        return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer);
+      default:
+        return null;
+    }
   }
 }

@@ -413,11 +413,12 @@ export class FetchService implements OnApplicationShutdown {
       const metadataChanged = await this.fetchMeta(
         bufferBlocks[bufferBlocks.length - 1],
       );
-      // const blocks = await fetchBlocksBatches(
-      //   this.api,
-      //   bufferBlocks,
-      //   metadataChanged ? undefined : this.parentSpecVersion,
-      // );
+      const blocks = await this.api.fetchBlocksArray(
+        bufferBlocks,
+        fetchBlocksBatches,
+        metadataChanged ? undefined : this.parentSpecVersion,
+      );
+      console.log(blocks); // TODO : Remove it
       logger.info(
         `fetch block [${bufferBlocks[0]},${
           bufferBlocks[bufferBlocks.length - 1]
