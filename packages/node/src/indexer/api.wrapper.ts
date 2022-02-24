@@ -176,11 +176,14 @@ export class ApiWrapper {
 
   async getBlockByHeight(height: number): Promise<SignedBlock | AlgorandBlock> {
     let block: SignedBlock | AlgorandBlock;
+    let blockHash: BlockHash;
     switch (this.network) {
       case 'algorand':
         block = (await this.algorand.client.block(height).do()).block;
         break;
       case 'polkadot':
+        blockHash = await this.substrate.rpc.chain.getBlockHash(height);
+        block = await this.substrate.rpc.chain.getBlock(blockHash);
         break;
       default:
         break;
@@ -203,7 +206,7 @@ export class ApiWrapper {
           bufferBlocks.map(async (round) => this.getBlockByHeight(round)),
         );
       case 'polkadot':
-        return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer); // TODO: get direct access instead of sending function in params
+        return fetchForPolkadot(this.substrate, bufferBlocks, overallSpecVer);
       default:
         return null;
     }
