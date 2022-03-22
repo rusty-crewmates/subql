@@ -5,4 +5,3 @@ export * from './ProjectManifestVersioned';
 export * from './v0_0_1';
 export * from './v0_2_0';
 export * from './v0_2_1';
-export * from './v0_3_0';
