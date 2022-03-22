@@ -24,8 +24,7 @@ import {
   SubqlRuntimeHandler,
   ApiWrapper,
   BlockWrapper,
-  SubstrateBlockWrapper,
-  SubstrateExtrinsic,
+  SubstrateBlock,
 } from '@subql/types';
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
@@ -113,7 +112,7 @@ export class IndexerManager {
 
   @profiler(argv.profiler)
   async indexBlock(blockContent: BlockWrapper): Promise<void> {
-    const { block, blockHeight } = blockContent;
+    const { blockHeight } = blockContent;
     this.eventEmitter.emit(IndexerEvent.BlockProcessing, {
       height: blockHeight,
       timestamp: Date.now(),
@@ -412,9 +411,11 @@ export class IndexerManager {
     // perform filter for custom ds
     filteredDs = filteredDs.filter((ds) => {
       if (isCustomDs(ds)) {
-        // return this.dsProcessorService
-        //   .getDsProcessor(ds)
-        //   .dsFilterProcessor(ds, this.api);
+        if (this.project.network.type === 'substrate') {
+          return this.dsProcessorService
+            .getDsProcessor(ds)
+            .dsFilterProcessor(ds, (this.api as SubstrateApi).getClient());
+        }
         return false; // TODO
       } else {
         return true;
@@ -457,7 +458,17 @@ export class IndexerManager {
     for (const handler of handlers) {
       switch (handler.kind) {
         case SubqlHandlerKind.Block:
-          await vm.securedExec(handler.handler, [blockContent]);
+          if (
+            !(
+              this.project.network.type === 'substrate' &&
+              !SubstrateUtil.filterBlock(
+                blockContent.block as SubstrateBlock,
+                handler.filter,
+              )
+            )
+          ) {
+            await vm.securedExec(handler.handler, [blockContent]);
+          }
           break;
         case SubqlHandlerKind.Call: {
           const filteredCalls = blockContent.calls(handler.filter);
