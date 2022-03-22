@@ -152,6 +152,24 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
     return apiAt;
   }
 
+  async getPatchedApiSandbox(
+    blockContent: SubstrateBlockWrapped,
+  ): Promise<ApiAt> {
+    const { blockHeight, hash, parentHash, specVersion } = blockContent;
+    this.currentBlockHash = hash;
+    this.currentBlockNumber = blockHeight;
+    if (this.parentSpecVersion !== specVersion) {
+      this.currentRuntimeVersion =
+        await this.client.rpc.state.getRuntimeVersion(parentHash);
+    }
+    const apiAt = (await this.client.at(
+      hash,
+      this.currentRuntimeVersion,
+    )) as ApiAt;
+    this.patchApiRpc(this.client, apiAt);
+    return apiAt;
+  }
+
   async disconnect(): Promise<void> {
     await this.client.disconnect();
   }
@@ -272,5 +290,9 @@ export class SubstrateBlockWrapped implements SubstrateBlockWrapper {
 
   get extrinsics(): SubstrateExtrinsic[] {
     return this._extrinsics;
+  }
+
+  get parentHash(): string {
+    return this.block.block.header.parentHash.toHex();
   }
 }

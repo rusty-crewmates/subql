@@ -85,7 +85,11 @@ export class IndexerManager {
     blockHeight: number,
     tx: Transaction,
   ): Promise<void> {
-    const vm = this.sandboxService.getDsProcessorWrapper(ds, this.api);
+    const vm = this.sandboxService.getDsProcessorWrapper(
+      ds,
+      this.api,
+      blockContent,
+    );
 
     // Inject function to create ds into vm
     vm.freeze(
