@@ -4,7 +4,7 @@
 import path from 'path';
 import { Injectable } from '@nestjs/common';
 import { isRuntimeDataSourceV0_2_0, levelFilter } from '@subql/common';
-import { ApiWrapper, Store, SubqlDatasource } from '@subql/types';
+import { ApiWrapper, BlockWrapper, Store, SubqlDatasource } from '@subql/types';
 import { NodeVM, NodeVMOptions, VMScript } from '@subql/x-vm2';
 import { merge } from 'lodash';
 import { NodeConfig } from '../configure/NodeConfig';
@@ -14,6 +14,7 @@ import { getProjectEntry } from '../utils/project';
 import { timeout } from '../utils/promise';
 import { getYargsOption } from '../yargs';
 import { ApiService } from './api.service';
+import { SubstrateApi, SubstrateBlockWrapped } from './api.substrate';
 import { StoreService } from './store.service';
 import { ApiAt } from './types';
 
@@ -135,7 +136,11 @@ export class SandboxService {
     return processor;
   }
 
-  getDsProcessorWrapper(ds: SubqlProjectDs, api: ApiWrapper): IndexerSandbox {
+  getDsProcessorWrapper(
+    ds: SubqlProjectDs,
+    api: ApiWrapper,
+    blockContent: BlockWrapper,
+  ): IndexerSandbox {
     const entry = this.getDataSourceEntry(ds);
     let processor = this.processorCache[entry];
     if (!processor) {
@@ -151,7 +156,17 @@ export class SandboxService {
       );
       this.processorCache[entry] = processor;
     }
-    processor.freeze(api, 'api');
+    if (api instanceof SubstrateApi) {
+      const patchedApi = api.getPatchedApiSandbox(
+        blockContent as SubstrateBlockWrapped,
+      );
+      processor.freeze(patchedApi, 'api');
+      if (argv.unsafe) {
+        processor.freeze(api, 'unsafeApi');
+      }
+    } else {
+      processor.freeze(api, 'api');
+    }
     return processor;
   }
 
