@@ -14,6 +14,7 @@ import {
 
 export enum SubqlDatasourceKind {
   Runtime = 'substrate/Runtime',
+  AvalancheRuntime = 'avalanche/Runtime',
 }
 
 export enum SubqlHandlerKind {

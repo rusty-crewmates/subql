@@ -3,6 +3,7 @@
 
 import {Extrinsic, EventRecord, SignedBlock} from '@polkadot/types/interfaces';
 import {SubqlCallFilter, SubqlEventFilter} from './project';
+import {SubqlDatasource} from '.';
 
 export interface Entity {
   id: string;
@@ -51,13 +52,16 @@ export interface AvalancheCallFilter {
 }
 
 export interface AvalancheEventFilter {
-  address?: string;
   topics?: Array<string | null | undefined>;
 }
 
 export type AlgorandBlock = Record<string, any>;
 export type AlgorandTransaction = Record<string, any>; // TODO
 export type AlgorandEvent = Record<string, any>; // TODO
+
+export interface AvalancheResult extends ReadonlyArray<any> {
+  readonly [key: string]: any;
+}
 
 export type AvalancheBlock = {
   difficulty: string;
@@ -82,7 +86,7 @@ export type AvalancheBlock = {
   uncles: string[];
 };
 
-export type AvalancheTransaction = {
+export type AvalancheTransaction<T extends AvalancheResult = AvalancheResult> = {
   blockHash: string;
   blockNumber: string;
   from: string;
@@ -97,9 +101,10 @@ export type AvalancheTransaction = {
   v: string;
   r: string;
   s: string;
+  args?: T;
 };
 
-export type AvalancheEvent = {
+export type AvalancheEvent<T extends AvalancheResult = AvalancheResult> = {
   logIndex: string;
   blockNumber: string;
   blockHash: string;
@@ -108,6 +113,7 @@ export type AvalancheEvent = {
   address: string;
   data: string;
   topics: string[];
+  args?: T;
 };
 
 export interface BlockWrapper<
@@ -124,8 +130,8 @@ export interface BlockWrapper<
   blockHeight: number;
   specVersion?: number;
   hash: string;
-  calls?: (filters?: CF | CF[]) => C[];
-  events?: (filters?: EF | EF[]) => E[];
+  calls?: (filters?: CF | CF[], ds?: SubqlDatasource) => C[];
+  events?: (filters?: EF | EF[], ds?: SubqlDatasource) => E[];
 }
 
 export interface ApiWrapper<
