@@ -1,6 +1,13 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import fs from 'fs';
+import { Interface } from '@ethersproject/abi';
+import { hexDataSlice } from '@ethersproject/bytes';
+import {
+  isRuntimeDataSourceV0_3_0,
+  RuntimeDataSourceV0_3_0,
+} from '@subql/common';
 import {
   ApiWrapper,
   AvalancheBlock,
@@ -9,10 +16,13 @@ import {
   AvalancheTransaction,
   AvalancheEventFilter,
   AvalancheCallFilter,
+  AvalancheResult,
+  SubqlDatasource,
 } from '@subql/types';
 import { Avalanche, BinTools } from 'avalanche';
 import { EVMAPI } from 'avalanche/dist/apis/evm';
 import { IndexAPI } from 'avalanche/dist/apis/index';
+import { getLogger } from '../utils/logger';
 import {
   eventToTopic,
   functionToSighash,
@@ -20,6 +30,28 @@ import {
   stringNormalizedEq,
 } from '../utils/string';
 import { AvalancheOptions } from './types';
+
+const logger = getLogger('api.avalanche');
+
+async function loadAssets(
+  ds: RuntimeDataSourceV0_3_0,
+): Promise<Record<string, string>> {
+  if (!ds.assets) {
+    return {};
+  }
+
+  const res: Record<string, string> = {};
+
+  for (const [name, { file }] of ds.assets) {
+    try {
+      res[name] = await fs.promises.readFile(file, { encoding: 'utf8' });
+    } catch (e) {
+      throw new Error(`Failed to load datasource asset ${file}`);
+    }
+  }
+
+  return res;
+}
 
 export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
   private client: Avalanche;
@@ -29,6 +61,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
   private baseUrl: string;
   private bintools: BinTools;
   private cchain: EVMAPI;
+  private contractInterfaces: Record<string, Interface> = {};
 
   constructor(private options: AvalancheOptions) {
     this.encoding = 'cb58';
@@ -120,6 +153,83 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
       }),
     );
   }
+
+  private buildInterface(
+    abiName: string,
+    assets: Record<string, string>,
+  ): Interface | undefined {
+    if (!assets[abiName]) {
+      throw new Error(`ABI named "${abiName}" not referenced in assets`);
+    }
+
+    // This assumes that all datasources have a different abi name or they are the same abi
+    if (!this.contractInterfaces[abiName]) {
+      // Constructing the interface validates the ABI
+      try {
+        let abiObj = JSON.parse(assets[abiName]);
+
+        /*
+         * Allows parsing JSON artifacts as well as ABIs
+         * https://trufflesuite.github.io/artifact-updates/background.html#what-are-artifacts
+         */
+        if (!Array.isArray(abiObj) && abiObj.abi) {
+          abiObj = abiObj.abi;
+        }
+
+        this.contractInterfaces[abiName] = new Interface(abiObj);
+      } catch (e) {
+        logger.error(`Unable to parse ABI: ${e.message}`);
+        throw new Error('ABI is invalid');
+      }
+    }
+
+    return this.contractInterfaces[abiName];
+  }
+
+  async parseEvent<T extends AvalancheResult = AvalancheResult>(
+    event: AvalancheEvent,
+    ds: RuntimeDataSourceV0_3_0,
+  ): Promise<AvalancheEvent<T>> {
+    try {
+      if (!ds?.options?.abi) {
+        return event as AvalancheEvent<T>;
+      }
+
+      const iface = this.buildInterface(ds.options.abi, await loadAssets(ds));
+
+      return {
+        ...event,
+        args: iface?.parseLog(event).args as T,
+      };
+    } catch (e) {
+      logger.warn(`Failed to parse event data: ${e.message}`);
+      return event as AvalancheEvent<T>;
+    }
+  }
+
+  async parseTransaction<T extends AvalancheResult = AvalancheResult>(
+    transaction: AvalancheTransaction,
+    ds: RuntimeDataSourceV0_3_0,
+  ): Promise<AvalancheTransaction<T>> {
+    try {
+      if (!ds?.options?.abi) {
+        return transaction as AvalancheTransaction<T>;
+      }
+
+      const iface = this.buildInterface(ds.options.abi, await loadAssets(ds));
+
+      return {
+        ...transaction,
+        args: iface?.decodeFunctionData(
+          iface.getFunction(hexDataSlice(transaction.input, 0, 4)),
+          transaction.input,
+        ) as T,
+      };
+    } catch (e) {
+      logger.warn(`Failed to parse transaction data: ${e.message}`);
+      return transaction as AvalancheTransaction<T>;
+    }
+  }
 }
 
 export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
@@ -140,91 +250,90 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
     return this.block.hash;
   }
 
-  calls(filter?: AvalancheCallFilter): AvalancheTransaction[] {
+  calls(
+    filter?: AvalancheCallFilter,
+    ds?: SubqlDatasource,
+  ): AvalancheTransaction[] {
     if (!filter) {
       return this.block.transactions;
     }
-    const transactions = this.block.transactions.filter((t) =>
-      this.filterCallProcessor(t, filter),
+
+    let address: string | undefined;
+    if (isRuntimeDataSourceV0_3_0(ds)) {
+      address = ds?.options?.address;
+    }
+
+    return this.block.transactions.filter((t) =>
+      this.filterCallProcessor(t, filter, address),
     );
-    return transactions;
   }
 
-  events(filter?: AvalancheEventFilter): AvalancheEvent[] {
+  events(
+    filter?: AvalancheEventFilter,
+    ds?: SubqlDatasource,
+  ): AvalancheEvent[] {
     if (!filter) {
       return this._logs;
     }
 
-    return this._logs.filter((log) => this.filterEventsProcessor(log, filter));
+    let address: string | undefined;
+    if (isRuntimeDataSourceV0_3_0(ds)) {
+      address = ds?.options?.address;
+    }
+
+    return this._logs.filter((log) =>
+      this.filterEventsProcessor(log, filter, address),
+    );
   }
 
   private filterCallProcessor(
     transaction: AvalancheTransaction,
-    filter: AvalancheCallFilter | AvalancheCallFilter[],
+    filter: AvalancheCallFilter,
+    address?: string,
   ): boolean {
-    let filters: AvalancheCallFilter[];
-    if (!(filter instanceof Array)) {
-      filters = [filter];
-    } else {
-      filters = filter as AvalancheCallFilter[];
+    if (filter.to && !stringNormalizedEq(filter.to, transaction.to)) {
+      return false;
     }
-    if (!filters.length) {
-      return true;
+    if (filter.from && !stringNormalizedEq(filter.from, transaction.from)) {
+      return false;
     }
-    return Boolean(
-      filters.find((filt) => {
-        if (filt.to && !stringNormalizedEq(filt.to, transaction.to)) {
-          return false;
-        }
-        if (filt.from && !stringNormalizedEq(filt.from, transaction.from)) {
-          return false;
-        }
 
-        if (
-          filt.function &&
-          transaction.input.indexOf(functionToSighash(filt.function)) !== 0
-        ) {
-          return false;
-        }
-        return true;
-      }),
-    );
+    if (address && !filter.to && !stringNormalizedEq(address, transaction.to)) {
+      return false;
+    }
+
+    if (
+      filter.function &&
+      transaction.input.indexOf(functionToSighash(filter.function)) !== 0
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   private filterEventsProcessor(
     log: AvalancheEvent,
-    filter: AvalancheEventFilter | AvalancheEventFilter[],
+    filter: AvalancheEventFilter,
+    address?: string,
   ): boolean {
-    let filters: AvalancheEventFilter[];
-    if (!(filter instanceof Array)) {
-      filters = [filter];
-    } else {
-      filters = filter as AvalancheEventFilter[];
+    if (address && !stringNormalizedEq(address, log.address)) {
+      return false;
     }
-    if (!filters.length) {
-      return true;
-    }
-    return Boolean(
-      filters.find((filt) => {
-        if (filt.address && !stringNormalizedEq(filt.address, log.address)) {
+
+    if (filter.topics) {
+      for (let i = 0; i < Math.min(filter.topics.length, 4); i++) {
+        const topic = filter.topics[i];
+        if (!topic) {
+          continue;
+        }
+
+        if (!hexStringEq(eventToTopic(topic), log.topics[i])) {
           return false;
         }
-
-        if (filt.topics) {
-          for (let i = 0; i < Math.min(filt.topics.length, 4); i++) {
-            const topic = filt.topics[i];
-            if (!topic) {
-              continue;
-            }
-
-            if (!hexStringEq(eventToTopic(topic), log.topics[i])) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }),
-    );
+      }
+    }
+    return true;
   }
 
   /****************************************************/

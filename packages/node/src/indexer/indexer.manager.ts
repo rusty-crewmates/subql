@@ -13,6 +13,7 @@ import {
   isEventHandlerProcessor,
   isCustomDs,
   isRuntimeDs,
+  isRuntimeDataSourceV0_3_0,
 } from '@subql/common';
 import {
   RuntimeHandlerInputMap,
@@ -21,10 +22,12 @@ import {
   SubqlCustomHandler,
   SubqlHandlerKind,
   SubqlNetworkFilter,
-  SubqlRuntimeHandler,
   ApiWrapper,
   BlockWrapper,
   SubstrateBlock,
+  SubqlRuntimeDatasource,
+  AvalancheTransaction,
+  AvalancheEvent,
 } from '@subql/types';
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
@@ -34,6 +37,7 @@ import { getLogger } from '../utils/logger';
 import { profiler } from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
 import { getYargsOption } from '../yargs';
+import { AvalancheApi } from './api.avalanche';
 import { ApiService } from './api.service';
 import { SubstrateApi, SubstrateBlockWrapped } from './api.substrate';
 import { DsProcessorService } from './ds-processor.service';
@@ -106,7 +110,7 @@ export class IndexerManager {
     );
 
     if (isRuntimeDs(ds)) {
-      await this.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
+      await this.indexBlockForRuntimeDs(vm, ds, blockContent);
     } else if (isCustomDs(ds)) {
       await this.indexBlockForCustomDs(ds, vm, blockContent);
     }
@@ -456,10 +460,10 @@ export class IndexerManager {
 
   private async indexBlockForRuntimeDs(
     vm: IndexerSandbox,
-    handlers: SubqlRuntimeHandler[],
+    ds: SubqlRuntimeDatasource,
     blockContent: BlockWrapper,
   ): Promise<void> {
-    for (const handler of handlers) {
+    for (const handler of ds.mapping.handlers) {
       switch (handler.kind) {
         case SubqlHandlerKind.Block:
           if (
@@ -475,14 +479,40 @@ export class IndexerManager {
           }
           break;
         case SubqlHandlerKind.Call: {
-          const filteredCalls = blockContent.calls(handler.filter);
+          let filteredCalls = blockContent.calls(handler.filter, ds);
+          if (
+            isRuntimeDataSourceV0_3_0(ds) &&
+            this.project.network.type === 'avalanche'
+          ) {
+            filteredCalls = await Promise.all(
+              filteredCalls.map((call) =>
+                (this.api as AvalancheApi).parseTransaction(
+                  call as AvalancheTransaction,
+                  ds,
+                ),
+              ),
+            );
+          }
           for (const e of filteredCalls) {
             await vm.securedExec(handler.handler, [e]);
           }
           break;
         }
         case SubqlHandlerKind.Event: {
-          const filteredEvents = blockContent.events(handler.filter);
+          let filteredEvents = blockContent.events(handler.filter, ds);
+          if (
+            isRuntimeDataSourceV0_3_0(ds) &&
+            this.project.network.type === 'avalanche'
+          ) {
+            filteredEvents = await Promise.all(
+              filteredEvents.map((event) =>
+                (this.api as AvalancheApi).parseEvent(
+                  event as AvalancheEvent,
+                  ds,
+                ),
+              ),
+            );
+          }
           for (const e of filteredEvents) {
             await vm.securedExec(handler.handler, [e]);
           }

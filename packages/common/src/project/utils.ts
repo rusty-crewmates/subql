@@ -38,7 +38,7 @@ export function isCustomDs<F extends SubqlNetworkFilter>(ds: SubqlDatasource): d
 }
 
 export function isRuntimeDs(ds: SubqlDatasource): ds is SubqlRuntimeDatasource {
-  return ds.kind === SubqlDatasourceKind.Runtime;
+  return ds.kind === SubqlDatasourceKind.Runtime || ds.kind === SubqlDatasourceKind.AvalancheRuntime;
 }
 
 export async function findAvailablePort(startPort: number, range = 10): Promise<number> {

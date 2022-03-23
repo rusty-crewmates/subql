@@ -10,6 +10,7 @@ import {
   GithubReader,
   IPFSReader,
   isCustomDs,
+  isRuntimeDataSourceV0_3_0,
   loadChainTypes,
   loadChainTypesFromJs,
   LocalReader,
@@ -119,6 +120,26 @@ export async function updateDataSourcesV0_2_0(
             dataSource.processor.file,
           );
         }
+        if (dataSource.assets) {
+          for (const [, asset] of dataSource.assets) {
+            if (reader instanceof LocalReader) {
+              asset.file = path.resolve(root, asset.file);
+            } else {
+              const res = await reader.getFile(asset.file);
+              const outputPath = path.resolve(
+                root,
+                asset.file.replace('ipfs://', ''),
+              );
+              await fs.promises.writeFile(outputPath, res as string);
+              asset.file = outputPath;
+            }
+          }
+        }
+        return {
+          ...dataSource,
+          mapping: { ...dataSource.mapping, entryScript, file },
+        };
+      } else if (isRuntimeDataSourceV0_3_0(dataSource)) {
         if (dataSource.assets) {
           for (const [, asset] of dataSource.assets) {
             if (reader instanceof LocalReader) {
