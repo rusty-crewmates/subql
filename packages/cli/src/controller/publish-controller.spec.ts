@@ -6,7 +6,8 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {promisify} from 'util';
-import {parseProjectManifest, ReaderFactory} from '@subql/common';
+import {ReaderFactory} from '@subql/common';
+import {parseSubstrateProjectManifest} from '@subql/common-substrate';
 import {create} from 'ipfs-http-client';
 import rimraf from 'rimraf';
 import Build from '../commands/build';
@@ -39,7 +40,7 @@ const projectSpecV0_2_0: ProjectSpecV0_2_0 = {
 
 const ipfsEndpoint = 'http://localhost:5001/api/v0';
 // Replace/Update your access token when test locally
-const testAuth = process.env.SUBQL_ACCESS_TOEKN;
+const testAuth = process.env.SUBQL_ACCESS_TOKEN;
 
 jest.setTimeout(120000);
 
@@ -119,7 +120,7 @@ describe('Cli publish', () => {
   it('throw error when v0.0.1 try to deploy', async () => {
     projectDir = await createTestProject(projectSpecV0_0_1);
     const reader = await ReaderFactory.create(projectDir);
-    const manifest = parseProjectManifest(await reader.getProjectSchema()).asImpl;
+    const manifest = parseSubstrateProjectManifest(await reader.getProjectSchema()).asImpl;
     expect(() => manifest.toDeployment()).toThrowError(
       'Manifest spec 0.0.1 is not support for deployment, please migrate to 0.2.0 or above'
     );
@@ -128,7 +129,7 @@ describe('Cli publish', () => {
   it('convert to deployment and removed descriptive field', async () => {
     projectDir = await createTestProject(projectSpecV0_2_0);
     const reader = await ReaderFactory.create(projectDir);
-    const manifest = parseProjectManifest(await reader.getProjectSchema()).asImpl;
+    const manifest = parseSubstrateProjectManifest(await reader.getProjectSchema()).asImpl;
     const deployment = manifest.toDeployment();
     expect(deployment).not.toContain('name');
     expect(deployment).not.toContain('author');

@@ -12,7 +12,6 @@ import {
   SubqlNetworkFilter,
   SubqlRuntimeDatasource,
 } from '@subql/types';
-
 import detectPort from 'detect-port';
 
 export function isBlockHandlerProcessor<T extends SubqlNetworkFilter, E>(

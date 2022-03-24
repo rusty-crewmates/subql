@@ -4,21 +4,18 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { GithubReader, IPFSReader, LocalReader, Reader } from '@subql/common';
 import {
   ChainTypes,
   CustomDatasourceV0_2_0,
-  GithubReader,
-  IPFSReader,
   isCustomDs,
   isRuntimeDataSourceV0_3_0,
   loadChainTypes,
   loadChainTypesFromJs,
-  LocalReader,
   parseChainTypes,
-  Reader,
   RuntimeDataSourceV0_0_1,
   RuntimeDataSourceV0_2_0,
-} from '@subql/common';
+} from '@subql/common-substrate';
 import {
   SubqlRuntimeHandler,
   SubqlCustomHandler,
@@ -62,9 +59,7 @@ export function getProjectEntry(root: string): string {
 
     return projectEntryCache[pkgPath];
   } catch (err) {
-    throw new Error(
-      `can not find package.json within directory ${this.option.root}`,
-    );
+    throw new Error(`can not find package.json within directory ${root}`);
   }
 }
 
@@ -155,11 +150,6 @@ export async function updateDataSourcesV0_2_0(
             }
           }
         }
-        return {
-          ...dataSource,
-          mapping: { ...dataSource.mapping, entryScript, file },
-        };
-      } else {
         return {
           ...dataSource,
           mapping: { ...dataSource.mapping, entryScript, file },

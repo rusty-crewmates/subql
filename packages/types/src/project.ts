@@ -115,6 +115,7 @@ interface ISubqlDatasource<M extends SubqlMapping, F extends SubqlNetworkFilter 
 export interface SubqlRuntimeDatasource<M extends SubqlMapping<SubqlRuntimeHandler> = SubqlMapping<SubqlRuntimeHandler>>
   extends ISubqlDatasource<M> {
   kind: SubqlDatasourceKind.Runtime;
+  assets?: Map<string, {file: string}>;
 }
 
 export interface SubqlNetworkFilter {
