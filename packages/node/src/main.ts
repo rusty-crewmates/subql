@@ -37,9 +37,11 @@ async function bootstrap() {
   }
 
   try {
+    console.log('Creating NestFactory');
     const app = await NestFactory.create(AppModule, {
       logger: debug ? new NestLogger() : false,
     });
+    console.log('NestFactory created');
     await app.init();
 
     const indexerManager = app.get(IndexerManager);

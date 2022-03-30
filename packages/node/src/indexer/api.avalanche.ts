@@ -19,7 +19,7 @@ import {
   AvalancheResult,
   SubqlDatasource,
 } from '@subql/types';
-import { Avalanche, BinTools } from 'avalanche';
+import { Avalanche } from 'avalanche';
 import { EVMAPI } from 'avalanche/dist/apis/evm';
 import { IndexAPI } from 'avalanche/dist/apis/index';
 import { getLogger } from '../utils/logger';
@@ -59,7 +59,6 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
   private genesisBlock: Record<string, any>;
   private encoding: string;
   private baseUrl: string;
-  private bintools: BinTools;
   private cchain: EVMAPI;
   private contractInterfaces: Record<string, Interface> = {};
 
@@ -68,7 +67,6 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
     this.client = new Avalanche(this.options.ip, this.options.port, 'http');
     this.client.setAuthToken(this.options.token);
     this.indexApi = this.client.Index();
-    this.bintools = BinTools.getInstance();
     this.cchain = this.client.CChain();
     switch (this.options.chainName) {
       case 'XV':

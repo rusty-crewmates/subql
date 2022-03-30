@@ -5,7 +5,6 @@ import {
   AlgorandBlock,
   AlgorandBlockWrapper,
   AlgorandEvent,
-  AlgorandTransaction,
   ApiWrapper,
 } from '@subql/types';
 import algosdk from 'algosdk';
