@@ -30,7 +30,7 @@ import { getLogger } from '../utils/logger';
 import { isBaseHandler, isCustomHandler } from '../utils/project';
 import { delay } from '../utils/promise';
 import { getYargsOption } from '../yargs';
-import { ApiService } from './api.service';
+import { ApiService } from './api.service.base';
 import { BlockedQueue } from './BlockedQueue';
 import { Dictionary, DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
@@ -134,7 +134,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   get api(): ApiWrapper {
-    return this.apiService.getApi();
+    return this.apiService.api;
   }
 
   // TODO: if custom ds doesn't support dictionary, use baseFilter, if yes, let

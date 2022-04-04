@@ -7,14 +7,13 @@ import {
   BlockWrapper,
   SubqlDatasourceKind,
   SubqlHandlerKind,
-  SubqlMapping,
   SubstrateBlock,
 } from '@subql/types';
 import { GraphQLSchema } from 'graphql';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
 import { fetchBlocksBatches } from '../utils/substrate';
-import { ApiService } from './api.service';
+import { ApiService } from './api.service.base';
 import { Dictionary, DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { FetchService } from './fetch.service';
@@ -252,7 +251,7 @@ describe('FetchService', () => {
       project,
     );
     await fetchService.init();
-    const api = apiService.getApi();
+    const api = apiService.api;
     expect(api.getFinalizedBlockHeight).toHaveBeenCalledTimes(1);
   });
 

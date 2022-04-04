@@ -12,10 +12,11 @@ import {
 import { GraphQLSchema } from 'graphql';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
-import { ApiService } from './api.service';
+import { ApiService } from './api.service.base';
 import { DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { FetchService } from './fetch.service';
+import { SubstrateApiService } from './substrate/api.service.substrate';
 
 function testSubqueryProject(): SubqueryProject {
   return {
@@ -51,7 +52,7 @@ async function createFetchService(
   project = testSubqueryProject(),
   batchSize = 5,
 ): Promise<FetchService> {
-  const apiService = new ApiService(project, new EventEmitter2());
+  const apiService = new SubstrateApiService(project, new EventEmitter2());
   await apiService.init();
   const dictionaryService = new DictionaryService(project);
   const dsPluginService = new DsProcessorService(project);

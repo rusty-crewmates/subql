@@ -14,8 +14,7 @@ import { getLogger } from '../utils/logger';
 import { getProjectEntry } from '../utils/project';
 import { timeout } from '../utils/promise';
 import { getYargsOption } from '../yargs';
-import { ApiService } from './api.service';
-import { SubstrateApi, SubstrateBlockWrapped } from './api.substrate';
+import { ApiService } from './api.service.base';
 import { StoreService } from './store.service';
 import { ApiAt } from './types';
 
@@ -132,7 +131,7 @@ export class SandboxService {
     }
     processor.freeze(api, 'api');
     if (argv.unsafe) {
-      processor.freeze(this.apiService.getApi(), 'unsafeApi');
+      processor.freeze(this.apiService.api, 'unsafeApi');
     }
     return processor;
   }
@@ -147,7 +146,6 @@ export class SandboxService {
     if (!processor) {
       processor = new IndexerSandbox(
         {
-          // api: await this.apiService.getPatchedApi(),
           store: this.storeService.getStore(),
           root: this.project.root,
           script: ds.mapping.entryScript,
@@ -157,17 +155,7 @@ export class SandboxService {
       );
       this.processorCache[entry] = processor;
     }
-    if (api instanceof SubstrateApi) {
-      const patchedApi = api.getPatchedApiSandbox(
-        blockContent as SubstrateBlockWrapped,
-      );
-      processor.freeze(patchedApi, 'api');
-      if (argv.unsafe) {
-        processor.freeze(api, 'unsafeApi');
-      }
-    } else {
-      processor.freeze(api, 'api');
-    }
+    api.freezeApi(processor, blockContent);
     return processor;
   }
 

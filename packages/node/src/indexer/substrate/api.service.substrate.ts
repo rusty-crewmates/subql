@@ -2,34 +2,41 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BlockHash } from '@polkadot/types/interfaces';
+import { RegisteredTypes } from '@polkadot/types/types';
 import { ProjectNetworkConfig } from '@subql/common';
+import { SubqueryProject } from '../../configure/SubqueryProject';
 import { getLogger } from '../../utils/logger';
-import { AlgorandApi } from '../api.algorand';
-import { ApiService } from './api.service.base';
+import { ApiService } from '../api.service.base';
+import { ApiAt } from '../types';
+import { SubstrateApi } from './api.substrate';
 
 const logger = getLogger('api');
 
 @Injectable()
-export class AlgorandApiService extends ApiService {
-  async onApplicationShutdown(): Promise<void> {
-    return Promise.resolve();
+export class SubstrateApiService extends ApiService {
+  constructor(project: SubqueryProject, private eventEmitter: EventEmitter2) {
+    super(project);
   }
 
-  async init(): Promise<AlgorandApiService> {
+  async onApplicationShutdown(): Promise<void> {
+    await Promise.all([this.api?.disconnect()]);
+  }
+
+  async init(): Promise<SubstrateApiService> {
     let network: Partial<ProjectNetworkConfig>;
+    let chainTypes: RegisteredTypes;
     try {
       network = this.project.network;
+      chainTypes = this.project.chainTypes;
     } catch (e) {
       logger.error(Object.keys(e));
       process.exit(1);
     }
     logger.info(JSON.stringify(this.project.network));
 
-    this.api = new AlgorandApi({
-      token: network.token,
-      server: network.endpoint,
-      port: network.port,
-    });
+    this.api = new SubstrateApi(network, chainTypes, this.eventEmitter);
     await this.api.init();
 
     this.networkMeta = {
@@ -52,11 +59,25 @@ export class AlgorandApiService extends ApiService {
     return this;
   }
 
-  get api(): AlgorandApi {
+  get api(): SubstrateApi {
     return this.api;
   }
 
-  private set api(value: AlgorandApi) {
+  private set api(value: SubstrateApi) {
     this.api = value;
+  }
+
+  async getPatchedApi(
+    blockHash: string | BlockHash,
+    blockNumber: number,
+    parentBlockHash?: BlockHash,
+  ): Promise<ApiAt> {
+    const substrateApi = this.api as SubstrateApi;
+    const patchedApi = await substrateApi.getPatchedApi(
+      blockHash,
+      blockNumber,
+      parentBlockHash,
+    );
+    return patchedApi;
   }
 }

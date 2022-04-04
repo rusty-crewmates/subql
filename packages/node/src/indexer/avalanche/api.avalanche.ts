@@ -22,14 +22,15 @@ import {
 import { Avalanche } from 'avalanche';
 import { EVMAPI } from 'avalanche/dist/apis/evm';
 import { IndexAPI } from 'avalanche/dist/apis/index';
-import { getLogger } from '../utils/logger';
+import { getLogger } from '../../utils/logger';
 import {
   eventToTopic,
   functionToSighash,
   hexStringEq,
   stringNormalizedEq,
-} from '../utils/string';
-import { AvalancheOptions } from './types';
+} from '../../utils/string';
+import { IndexerSandbox } from '../sandbox.service';
+import { AvalancheOptions } from '../types';
 
 const logger = getLogger('api.avalanche');
 
@@ -150,6 +151,10 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
         );
       }),
     );
+  }
+
+  freezeApi(processor: IndexerSandbox): void {
+    processor.freeze(this.client, 'api');
   }
 
   private buildInterface(
@@ -337,10 +342,6 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
   /****************************************************/
   /*           AVALANCHE SPECIFIC METHODS             */
   /****************************************************/
-
-  get(objects: string[]): Record<string, any> {
-    return objects.map((obj) => this.block[obj]);
-  }
 
   getTransactions(filters?: string[]): Record<string, any> {
     if (!filters) {

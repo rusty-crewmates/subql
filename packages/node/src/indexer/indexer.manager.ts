@@ -37,9 +37,10 @@ import { getLogger } from '../utils/logger';
 import { profiler } from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
 import { getYargsOption } from '../yargs';
-import { AvalancheApi } from './api.avalanche';
-import { ApiService } from './api.service';
-import { SubstrateApi, SubstrateBlockWrapped } from './api.substrate';
+import { AlgorandApiService } from './algorand/api.service.algorand';
+import { ApiService } from './api.service.base';
+import { AvalancheApi } from './avalanche/api.avalanche';
+import { AvalancheApiService } from './avalanche/api.service.avalanche';
 import { DsProcessorService } from './ds-processor.service';
 import { DynamicDsService } from './dynamic-ds.service';
 import { MetadataFactory, MetadataRepo } from './entities/Metadata.entity';
@@ -50,6 +51,8 @@ import { PoiService } from './poi.service';
 import { PoiBlock } from './PoiBlock';
 import { IndexerSandbox, SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
+import { SubstrateApiService } from './substrate/api.service.substrate';
+import { SubstrateApi, SubstrateBlockWrapped } from './substrate/api.substrate';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version: packageVersion } = require('../../package.json');
@@ -69,7 +72,11 @@ export class IndexerManager {
 
   constructor(
     private storeService: StoreService,
-    private apiService: ApiService,
+    private apiService:
+      | ApiService
+      | SubstrateApiService
+      | AvalancheApiService
+      | AlgorandApiService,
     private fetchService: FetchService,
     private poiService: PoiService,
     protected mmrService: MmrService,
@@ -179,7 +186,7 @@ export class IndexerManager {
   async start(): Promise<void> {
     await this.dsProcessorService.validateProjectCustomDatasources();
     await this.fetchService.init();
-    this.api = this.apiService.getApi();
+    this.api = this.apiService.api;
     const schema = await this.ensureProject();
     await this.initDbSchema(schema);
     this.metadataRepo = await this.ensureMetadata(schema);

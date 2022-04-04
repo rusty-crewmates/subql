@@ -8,7 +8,8 @@ import {
   ApiWrapper,
 } from '@subql/types';
 import algosdk from 'algosdk';
-import { AlgorandOptions } from './types';
+import { IndexerSandbox } from '../sandbox.service';
+import { AlgorandOptions } from '../types';
 
 export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
   private lastHeader: any;
@@ -60,6 +61,10 @@ export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
           new AlgorandBlockWrapped((await this.client.block(round).do()).block),
       ),
     );
+  }
+
+  freezeApi(processor: IndexerSandbox): void {
+    processor.freeze(this.client, 'api');
   }
 }
 

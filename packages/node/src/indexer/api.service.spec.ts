@@ -7,7 +7,8 @@ import { ProjectNetworkV0_0_1 } from '@subql/common-substrate';
 import { GraphQLSchema } from 'graphql';
 import { omit } from 'lodash';
 import { SubqueryProject } from '../configure/SubqueryProject';
-import { ApiService } from './api.service';
+import { ApiService } from './api.service.base';
+import { SubstrateApiService } from './substrate/api.service.substrate';
 
 jest.mock('@polkadot/api', () => {
   const ApiPromise = jest.fn();
@@ -71,7 +72,7 @@ function testSubqueryProject(): SubqueryProject {
 describe('ApiService', () => {
   it('read custom types from project manifest', async () => {
     const project = testSubqueryProject();
-    const apiService = new ApiService(project, new EventEmitter2());
+    const apiService = new SubstrateApiService(project, new EventEmitter2());
     await apiService.init();
     expect(WsProvider).toHaveBeenCalledWith(testNetwork.endpoint);
     expect(ApiPromise.create).toHaveBeenCalledWith({
@@ -86,7 +87,7 @@ describe('ApiService', () => {
 
     (project.network as any).genesisHash = '0x';
 
-    const apiService = new ApiService(project, new EventEmitter2());
+    const apiService = new SubstrateApiService(project, new EventEmitter2());
 
     await expect(apiService.init()).rejects.toThrow();
   });

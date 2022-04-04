@@ -8,7 +8,7 @@ import { Sequelize } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
 import { SubqueryFactory } from '../entities';
-import { ApiService } from './api.service';
+import { ApiService } from './api.service.base';
 import { DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { DynamicDsService } from './dynamic-ds.service';
@@ -18,6 +18,7 @@ import { MmrService } from './mmr.service';
 import { PoiService } from './poi.service';
 import { SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
+import { SubstrateApiService } from './substrate/api.service.substrate';
 
 jest.mock('sequelize', () => {
   const mSequelize = {
@@ -115,7 +116,7 @@ function createIndexerManager(project: SubqueryProject): IndexerManager {
   const sequilize = new Sequelize();
   const eventEmitter = new EventEmitter2();
 
-  const apiService = new ApiService(project, eventEmitter);
+  const apiService = new SubstrateApiService(project, eventEmitter);
   const dictionaryService = new DictionaryService(project);
 
   const dsPluginService = new DsProcessorService(project);

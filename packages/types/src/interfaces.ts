@@ -144,6 +144,7 @@ export interface ApiWrapper<
   getFinalizedBlockHeight: () => Promise<number>;
   getLastHeight: () => Promise<number>;
   fetchBlocks: (bufferBlocks: number[]) => Promise<BW[]>;
+  freezeApi: (processor: any, blockContent?: BlockWrapper) => void;
 }
 
 export interface AvalancheBlockWrapper
@@ -154,7 +155,6 @@ export interface AvalancheBlockWrapper
     AvalancheCallFilter,
     AvalancheEventFilter
   > {
-  get: (objects: string[]) => Record<string, any>;
   getTransactions: (filters?: string[]) => Record<string, any>;
 }
 

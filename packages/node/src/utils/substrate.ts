@@ -21,8 +21,9 @@ import {
   SubstrateExtrinsic,
 } from '@subql/types';
 import { last, merge, range } from 'lodash';
-import { SubstrateBlockWrapped } from '../indexer/api.substrate';
+import { SubstrateBlockWrapped } from '../indexer/substrate/api.substrate';
 import { getLogger } from './logger';
+
 const logger = getLogger('fetch');
 
 export function wrapBlock(

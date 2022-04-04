@@ -4,19 +4,18 @@
 import { Injectable } from '@nestjs/common';
 import { ProjectNetworkConfig } from '@subql/common';
 import { getLogger } from '../../utils/logger';
-import { AvalancheApi } from '../api.avalanche';
-import { ApiService } from './api.service.base';
+import { AlgorandApi } from '../algorand/api.algorand';
+import { ApiService } from '../api.service.base';
 
 const logger = getLogger('api');
 
 @Injectable()
-export class AvalancheApiService extends ApiService {
+export class AlgorandApiService extends ApiService {
   async onApplicationShutdown(): Promise<void> {
     return Promise.resolve();
   }
 
-  async init(): Promise<AvalancheApiService> {
-    console.log('Api Avalanche Init');
+  async init(): Promise<AlgorandApiService> {
     let network: Partial<ProjectNetworkConfig>;
     try {
       network = this.project.network;
@@ -26,11 +25,10 @@ export class AvalancheApiService extends ApiService {
     }
     logger.info(JSON.stringify(this.project.network));
 
-    this.api = new AvalancheApi({
-      ip: network.endpoint,
-      port: network.port,
+    this.api = new AlgorandApi({
       token: network.token,
-      chainName: network.chainName,
+      server: network.endpoint,
+      port: network.port,
     });
     await this.api.init();
 
@@ -54,11 +52,11 @@ export class AvalancheApiService extends ApiService {
     return this;
   }
 
-  get api(): AvalancheApi {
+  get api(): AlgorandApi {
     return this.api;
   }
 
-  private set api(value: AvalancheApi) {
+  private set api(value: AlgorandApi) {
     this.api = value;
   }
 }

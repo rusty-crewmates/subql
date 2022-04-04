@@ -26,11 +26,12 @@ import {
   SubqlCallFilter,
   SubqlEventFilter,
 } from '@subql/types';
-import { profiler, profilerWrap } from '../utils/profiler';
-import * as SubstrateUtil from '../utils/substrate';
-import { getYargsOption } from '../yargs';
-import { IndexerEvent } from './events';
-import { ApiAt } from './types';
+import { profiler, profilerWrap } from '../../utils/profiler';
+import * as SubstrateUtil from '../../utils/substrate';
+import { getYargsOption } from '../../yargs';
+import { IndexerEvent } from '../events';
+import { IndexerSandbox } from '../sandbox.service';
+import { ApiAt } from '../types';
 
 const NOT_SUPPORT = (name: string) => () => {
   throw new Error(`${name}() is not supported`);
@@ -127,6 +128,18 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
       metadataChanged ? undefined : this.parentSpecVersion,
     );
     return blocks;
+  }
+
+  freezeApi(
+    processor: IndexerSandbox,
+    blockContent: SubstrateBlockWrapped,
+  ): void {
+    const { argv } = getYargsOption();
+
+    processor.freeze(this.getPatchedApiSandbox(blockContent), 'api');
+    if (argv.unsafe) {
+      processor.freeze(this.client, 'unsafeApi');
+    }
   }
 
   /****************************************************/

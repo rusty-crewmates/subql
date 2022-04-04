@@ -31,7 +31,7 @@ export class StoreOperations {
         ({ name }) => name === operation.entityType,
       );
       for (const field of operationModel.fields) {
-        const fieldValue = operation.data[field.name];
+        const fieldValue = (operation.data as Entity)[field.name];
         dataBufferArray.push(Buffer.from(field.name));
 
         if (fieldValue !== undefined && fieldValue !== null) {
@@ -65,7 +65,8 @@ export class StoreOperations {
   }
 
   reset(): void {
-    this.merkleTools.resetTree();
+    // TODO doesn't exists
+    // this.merkleTools.resetTree();
   }
 
   makeOperationMerkleTree() {
