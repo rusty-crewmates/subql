@@ -6,7 +6,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SubqueryProject } from '../configure/SubqueryProject';
 import { DbModule } from '../db/db.module';
 import { AlgorandApiService } from './algorand/api.service.algorand';
-import { ApiService as ApiServiceProvider } from './api.service.base';
+import { ApiService } from './api.service.base';
 import { AvalancheApiService } from './avalanche/api.service.avalanche';
 import { BenchmarkService } from './benchmark.service';
 import { DictionaryService } from './dictionary.service';
@@ -20,11 +20,11 @@ import { SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
 import { SubstrateApiService } from './substrate/api.service.substrate';
 
-const ApiService = {
-  provide: 'ApiService',
+const ApiServiceProvider = {
+  provide: ApiService,
   useFactory: async (project: SubqueryProject, eventEmitter: EventEmitter2) => {
     const { type } = project.network;
-    let apiService: ApiServiceProvider;
+    let apiService: ApiService;
     switch (type) {
       case 'algorand':
         apiService = new AlgorandApiService(project);
@@ -50,7 +50,7 @@ const BaseProvider = [
   IndexerManager,
   StoreService,
   FetchService,
-  ApiService,
+  ApiServiceProvider,
   BenchmarkService,
   DictionaryService,
   SandboxService,

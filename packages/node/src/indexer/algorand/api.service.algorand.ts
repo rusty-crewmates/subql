@@ -11,9 +11,7 @@ const logger = getLogger('api');
 
 @Injectable()
 export class AlgorandApiService extends ApiService {
-  async onApplicationShutdown(): Promise<void> {
-    return Promise.resolve();
-  }
+  private _api: AlgorandApi;
 
   async init(): Promise<AlgorandApiService> {
     let network: Partial<ProjectNetworkConfig>;
@@ -53,10 +51,10 @@ export class AlgorandApiService extends ApiService {
   }
 
   get api(): AlgorandApi {
-    return this.api;
+    return this._api;
   }
 
   private set api(value: AlgorandApi) {
-    this.api = value;
+    this._api = value;
   }
 }

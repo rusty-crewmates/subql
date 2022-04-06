@@ -11,12 +11,9 @@ const logger = getLogger('api');
 
 @Injectable()
 export class AvalancheApiService extends ApiService {
-  async onApplicationShutdown(): Promise<void> {
-    return Promise.resolve();
-  }
+  private _api: AvalancheApi;
 
   async init(): Promise<AvalancheApiService> {
-    console.log('Api Avalanche Init');
     let network: Partial<ProjectNetworkConfig>;
     try {
       network = this.project.network;
@@ -32,6 +29,7 @@ export class AvalancheApiService extends ApiService {
       token: network.token,
       chainName: network.chainName,
     });
+
     await this.api.init();
 
     this.networkMeta = {
@@ -55,10 +53,10 @@ export class AvalancheApiService extends ApiService {
   }
 
   get api(): AvalancheApi {
-    return this.api;
+    return this._api;
   }
 
   private set api(value: AvalancheApi) {
-    this.api = value;
+    this._api = value;
   }
 }

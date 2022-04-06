@@ -1,7 +1,7 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BlockHash } from '@polkadot/types/interfaces';
 import { RegisteredTypes } from '@polkadot/types/types';
@@ -15,7 +15,12 @@ import { SubstrateApi } from './api.substrate';
 const logger = getLogger('api');
 
 @Injectable()
-export class SubstrateApiService extends ApiService {
+export class SubstrateApiService
+  extends ApiService
+  implements OnApplicationShutdown
+{
+  private _api: SubstrateApi;
+
   constructor(project: SubqueryProject, private eventEmitter: EventEmitter2) {
     super(project);
   }
@@ -60,11 +65,11 @@ export class SubstrateApiService extends ApiService {
   }
 
   get api(): SubstrateApi {
-    return this.api;
+    return this._api;
   }
 
   private set api(value: SubstrateApi) {
-    this.api = value;
+    this._api = value;
   }
 
   async getPatchedApi(
@@ -72,8 +77,7 @@ export class SubstrateApiService extends ApiService {
     blockNumber: number,
     parentBlockHash?: BlockHash,
   ): Promise<ApiAt> {
-    const substrateApi = this.api as SubstrateApi;
-    const patchedApi = await substrateApi.getPatchedApi(
+    const patchedApi = await this.api.getPatchedApi(
       blockHash,
       blockNumber,
       parentBlockHash,
