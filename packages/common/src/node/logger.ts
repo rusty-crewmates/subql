@@ -1,10 +1,10 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { LoggerService } from '@nestjs/common';
-import { Logger } from '@subql/common';
+import {LoggerService} from '@nestjs/common';
+import {Logger} from '@subql/common';
 import Pino from 'pino';
-import { argv } from '../yargs';
+import {argv} from './yargs';
 
 const outputFmt = argv('output-fmt') as 'json' | 'colored';
 const debug = argv('debug');
@@ -29,7 +29,7 @@ export class NestLogger implements LoggerService {
 
   error(message: any, trace?: string) {
     if (trace) {
-      this.logger.error({ trace }, message);
+      this.logger.error({trace}, message);
     } else {
       this.logger.error(message);
     }

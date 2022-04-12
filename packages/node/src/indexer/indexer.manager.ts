@@ -14,7 +14,14 @@ import {
   isCustomDs,
   isRuntimeDs,
   isRuntimeDataSourceV0_3_0,
+  ApiService,
+  getLogger,
+  getYargsOption,
+  profiler,
 } from '@subql/common';
+import { AvalancheApi } from '@subql/node-avalanche';
+import * as SubstrateUtil from '@subql/node-substrate';
+import { SubstrateApi, SubstrateBlockWrapped } from '@subql/node-substrate';
 import {
   RuntimeHandlerInputMap,
   SecondLayerHandlerProcessor,
@@ -33,12 +40,6 @@ import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqlProjectDs, SubqueryProject } from '../configure/SubqueryProject';
 import { SubqueryRepo } from '../entities';
-import { getLogger } from '../utils/logger';
-import { profiler } from '../utils/profiler';
-import * as SubstrateUtil from '../utils/substrate';
-import { getYargsOption } from '../yargs';
-import { ApiService } from './api.service.base';
-import { AvalancheApi } from './avalanche/api.avalanche';
 import { DsProcessorService } from './ds-processor.service';
 import { DynamicDsService } from './dynamic-ds.service';
 import { MetadataFactory, MetadataRepo } from './entities/Metadata.entity';
@@ -49,7 +50,6 @@ import { PoiService } from './poi.service';
 import { PoiBlock } from './PoiBlock';
 import { IndexerSandbox, SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
-import { SubstrateApi, SubstrateBlockWrapped } from './substrate/api.substrate';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version: packageVersion } = require('../../package.json');

@@ -5,6 +5,7 @@ import assert from 'assert';
 import { Injectable } from '@nestjs/common';
 import { hexToU8a, u8aToBuffer } from '@polkadot/util';
 import { blake2AsHex } from '@polkadot/util-crypto';
+import { getLogger, getYargsOption } from '@subql/common';
 import { GraphQLModelsRelationsEnums } from '@subql/common/graphql/types';
 import { Entity, Store } from '@subql/types';
 import { camelCase, flatten, upperFirst, isEqual } from 'lodash';
@@ -19,7 +20,6 @@ import {
 } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
 import { modelsTypeToModelAttributes } from '../utils/graphql';
-import { getLogger } from '../utils/logger';
 import { camelCaseObjectKey } from '../utils/object';
 import {
   commentConstraintQuery,
@@ -29,7 +29,6 @@ import {
   getFkConstraint,
   smartTags,
 } from '../utils/sync-helper';
-import { getYargsOption } from '../yargs';
 import {
   Metadata,
   MetadataFactory,
@@ -39,6 +38,7 @@ import { PoiFactory, PoiRepo, ProofOfIndex } from './entities/Poi.entity';
 import { PoiService } from './poi.service';
 import { StoreOperations } from './StoreOperations';
 import { OperationType } from './types';
+
 const logger = getLogger('store');
 const NULL_MERKEL_ROOT = hexToU8a('0x00');
 const { argv } = getYargsOption();

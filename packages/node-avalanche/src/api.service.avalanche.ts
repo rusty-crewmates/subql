@@ -1,11 +1,9 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Injectable } from '@nestjs/common';
-import { ProjectNetworkConfig } from '@subql/common';
-import { getLogger } from '../../utils/logger';
-import { ApiService } from '../api.service.base';
-import { AvalancheApi } from './api.avalanche';
+import {Injectable} from '@nestjs/common';
+import {ProjectNetworkConfig, ApiService, getLogger} from '@subql/common';
+import {AvalancheApi} from './api.avalanche';
 
 const logger = getLogger('api');
 
@@ -38,12 +36,9 @@ export class AvalancheApiService extends ApiService {
       genesisHash: this.api.getGenesisHash(),
     };
 
-    if (
-      network.genesisHash &&
-      network.genesisHash !== this.networkMeta.genesisHash
-    ) {
+    if (network.genesisHash && network.genesisHash !== this.networkMeta.genesisHash) {
       const err = new Error(
-        `Network genesisHash doesn't match expected genesisHash. expected="${network.genesisHash}" actual="${this.networkMeta.genesisHash}`,
+        `Network genesisHash doesn't match expected genesisHash. expected="${network.genesisHash}" actual="${this.networkMeta.genesisHash}`
       );
       logger.error(err, err.message);
       throw err;

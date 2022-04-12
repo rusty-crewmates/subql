@@ -1,27 +1,21 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Injectable, OnApplicationShutdown } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { BlockHash } from '@polkadot/types/interfaces';
-import { RegisteredTypes } from '@polkadot/types/types';
-import { ProjectNetworkConfig } from '@subql/common';
-import { SubqueryProject } from '../../configure/SubqueryProject';
-import { getLogger } from '../../utils/logger';
-import { ApiService } from '../api.service.base';
-import { ApiAt } from '../types';
-import { SubstrateApi } from './api.substrate';
+import {Injectable, OnApplicationShutdown} from '@nestjs/common';
+import {EventEmitter2} from '@nestjs/event-emitter';
+import {BlockHash} from '@polkadot/types/interfaces';
+import {RegisteredTypes} from '@polkadot/types/types';
+import {ProjectNetworkConfig, ApiService, getLogger} from '@subql/common';
+import {ApiAt} from '@subql/types';
+import {SubstrateApi} from './api.substrate';
 
 const logger = getLogger('api');
 
 @Injectable()
-export class SubstrateApiService
-  extends ApiService
-  implements OnApplicationShutdown
-{
+export class SubstrateApiService extends ApiService implements OnApplicationShutdown {
   private _api: SubstrateApi;
 
-  constructor(project: SubqueryProject, private eventEmitter: EventEmitter2) {
+  constructor(project: any, private eventEmitter: EventEmitter2) {
     super(project);
   }
 
@@ -50,12 +44,9 @@ export class SubstrateApiService
       genesisHash: this.api.getGenesisHash(),
     };
 
-    if (
-      network.genesisHash &&
-      network.genesisHash !== this.networkMeta.genesisHash
-    ) {
+    if (network.genesisHash && network.genesisHash !== this.networkMeta.genesisHash) {
       const err = new Error(
-        `Network genesisHash doesn't match expected genesisHash. expected="${network.genesisHash}" actual="${this.networkMeta.genesisHash}`,
+        `Network genesisHash doesn't match expected genesisHash. expected="${network.genesisHash}" actual="${this.networkMeta.genesisHash}`
       );
       logger.error(err, err.message);
       throw err;
@@ -72,16 +63,8 @@ export class SubstrateApiService
     this._api = value;
   }
 
-  async getPatchedApi(
-    blockHash: string | BlockHash,
-    blockNumber: number,
-    parentBlockHash?: BlockHash,
-  ): Promise<ApiAt> {
-    const patchedApi = await this.api.getPatchedApi(
-      blockHash,
-      blockNumber,
-      parentBlockHash,
-    );
+  async getPatchedApi(blockHash: string | BlockHash, blockNumber: number, parentBlockHash?: BlockHash): Promise<ApiAt> {
+    const patchedApi = await this.api.getPatchedApi(blockHash, blockNumber, parentBlockHash);
     return patchedApi;
   }
 }

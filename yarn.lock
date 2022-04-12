@@ -4184,6 +4184,33 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@subql/node-algorand@workspace:packages/node-algorand":
+  version: 0.0.0-use.local
+  resolution: "@subql/node-algorand@workspace:packages/node-algorand"
+  dependencies:
+    "@subql/common": "workspace:*"
+    "@subql/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@subql/node-avalanche@workspace:packages/node-avalanche":
+  version: 0.0.0-use.local
+  resolution: "@subql/node-avalanche@workspace:packages/node-avalanche"
+  dependencies:
+    "@subql/common": "workspace:*"
+    "@subql/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@subql/node-substrate@workspace:packages/node-substrate":
+  version: 0.0.0-use.local
+  resolution: "@subql/node-substrate@workspace:packages/node-substrate"
+  dependencies:
+    "@subql/common": "workspace:*"
+    "@subql/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@subql/node-terra@workspace:packages/node-terra":
   version: 0.0.0-use.local
   resolution: "@subql/node-terra@workspace:packages/node-terra"

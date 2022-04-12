@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { NestFactory } from '@nestjs/core';
-import { findAvailablePort } from '@subql/common';
+import {
+  findAvailablePort,
+  getYargsOption,
+  getLogger,
+  NestLogger,
+} from '@subql/common';
 import { AppModule } from './app.module';
 import { IndexerManager } from './indexer/indexer.manager';
-import { getLogger, NestLogger } from './utils/logger';
-import { getYargsOption } from './yargs';
 
 const DEFAULT_PORT = 3000;
 const logger = getLogger('subql-node');
@@ -37,11 +40,9 @@ async function bootstrap() {
   }
 
   try {
-    console.log('Creating NestFactory');
     const app = await NestFactory.create(AppModule, {
       logger: debug ? new NestLogger() : false,
     });
-    console.log('NestFactory created');
     await app.init();
 
     const indexerManager = app.get(IndexerManager);

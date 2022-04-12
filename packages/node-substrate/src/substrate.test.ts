@@ -1,12 +1,8 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import {
-  fetchBlocks,
-  fetchBlocksViaRangeQuery,
-  prefetchMetadata,
-} from './substrate';
+import {ApiPromise, WsProvider} from '@polkadot/api';
+import {fetchBlocks, fetchBlocksViaRangeQuery, prefetchMetadata} from './substrate';
 
 const endpoint = 'wss://polkadot.api.onfinality.io/public-ws';
 
@@ -16,7 +12,7 @@ describe('substrate utils', () => {
   let api: ApiPromise;
   beforeAll(async () => {
     const provider = new WsProvider(endpoint);
-    api = await ApiPromise.create({ provider });
+    api = await ApiPromise.create({provider});
   });
 
   afterAll(() => api?.disconnect());
@@ -36,7 +32,7 @@ describe('substrate utils', () => {
   it.skip('when failed to fetch, log block height and re-throw error', async () => {
     //some large number of block height
     await expect(fetchBlocks(api, 100000000, 100000019)).rejects.toThrow(
-      /Unable to retrieve header and parent from supplied hash/,
+      /Unable to retrieve header and parent from supplied hash/
     );
   });
 

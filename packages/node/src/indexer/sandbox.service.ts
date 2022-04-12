@@ -3,20 +3,27 @@
 
 import path from 'path';
 import { Injectable } from '@nestjs/common';
-import { levelFilter } from '@subql/common';
+import {
+  levelFilter,
+  ApiService,
+  getYargsOption,
+  getLogger,
+} from '@subql/common';
 import { isDatasourceV0_2_0 } from '@subql/common-substrate';
-import { ApiWrapper, BlockWrapper, Store, SubqlDatasource } from '@subql/types';
+import {
+  ApiAt,
+  ApiWrapper,
+  BlockWrapper,
+  Store,
+  SubqlDatasource,
+} from '@subql/types';
 import { NodeVM, NodeVMOptions, VMScript } from '@subql/x-vm2';
 import { merge } from 'lodash';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqlProjectDs, SubqueryProject } from '../configure/SubqueryProject';
-import { getLogger } from '../utils/logger';
 import { getProjectEntry } from '../utils/project';
 import { timeout } from '../utils/promise';
-import { getYargsOption } from '../yargs';
-import { ApiService } from './api.service.base';
 import { StoreService } from './store.service';
-import { ApiAt } from './types';
 
 const { argv } = getYargsOption();
 

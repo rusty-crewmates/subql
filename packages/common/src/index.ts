@@ -9,3 +9,5 @@ export * from './query';
 export {levelFilter, Logger, LoggerOption} from './logger';
 export * from './types';
 export * from './constants';
+export * from './utils';
+export * from './node';

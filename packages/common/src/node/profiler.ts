@@ -1,21 +1,16 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/* class decorator */
+import {getLogger} from './logger';
 
-import { getLogger } from './logger';
+/* class decorator */
 
 function isPromise(e: any): boolean {
   return !!e && typeof e.then === 'function';
 }
 const logger = getLogger('profiler');
 
-function printCost(
-  start: Date,
-  end: Date,
-  target: string,
-  method: string,
-): void {
+function printCost(start: Date, end: Date, target: string, method: string): void {
   logger.info(`${target}, ${method}, ${end.getTime() - start.getTime()} ms`);
 }
 export function profiler(enabled = true): any {
@@ -35,7 +30,7 @@ export function profiler(enabled = true): any {
             (err: any) => {
               printCost(start, new Date(), target.constructor.name, name);
               throw err;
-            },
+            }
           );
         } else {
           printCost(start, new Date(), target.constructor.name, name);
@@ -60,7 +55,7 @@ export const profilerWrap =
         (err: any) => {
           printCost(start, new Date(), target, name);
           throw err;
-        },
+        }
       );
     } else {
       printCost(start, new Date(), target, name);

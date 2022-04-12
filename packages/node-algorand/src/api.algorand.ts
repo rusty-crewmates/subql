@@ -1,15 +1,14 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  AlgorandBlock,
-  AlgorandBlockWrapper,
-  AlgorandEvent,
-  ApiWrapper,
-} from '@subql/types';
+import {AlgorandBlock, AlgorandBlockWrapper, AlgorandEvent, ApiWrapper} from '@subql/types';
 import algosdk from 'algosdk';
-import { IndexerSandbox } from '../sandbox.service';
-import { AlgorandOptions } from '../types';
+
+export type AlgorandOptions = {
+  token: string;
+  server: string;
+  port: number;
+};
 
 export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
   private lastHeader: any;
@@ -18,16 +17,8 @@ export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
   constructor(private options: AlgorandOptions) {}
 
   async init(): Promise<void> {
-    this.client = new algosdk.Algodv2(
-      this.options.token,
-      this.options.server,
-      this.options.port,
-    );
-    this.lastHeader = (
-      await this.client
-        .block((await this.client.status().do())['last-round'])
-        .do()
-    ).block;
+    this.client = new algosdk.Algodv2(this.options.token, this.options.server, this.options.port);
+    this.lastHeader = (await this.client.block((await this.client.status().do())['last-round']).do()).block;
   }
 
   getGenesisHash(): string {
@@ -43,9 +34,7 @@ export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
   }
 
   async getFinalizedBlockHeight(): Promise<number> {
-    const finalizedBlockHeight = (await this.client.status().do())[
-      'last-round'
-    ];
+    const finalizedBlockHeight = (await this.client.status().do())['last-round'];
     return finalizedBlockHeight;
   }
 
@@ -56,14 +45,11 @@ export class AlgorandApi implements ApiWrapper<AlgorandBlockWrapper> {
 
   async fetchBlocks(bufferBlocks: number[]): Promise<AlgorandBlockWrapper[]> {
     return Promise.all(
-      bufferBlocks.map(
-        async (round) =>
-          new AlgorandBlockWrapped((await this.client.block(round).do()).block),
-      ),
+      bufferBlocks.map(async (round) => new AlgorandBlockWrapped((await this.client.block(round).do()).block))
     );
   }
 
-  freezeApi(processor: IndexerSandbox): void {
+  freezeApi(processor: any): void {
     processor.freeze(this.client, 'api');
   }
 }

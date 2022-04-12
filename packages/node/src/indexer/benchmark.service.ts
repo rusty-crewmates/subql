@@ -3,9 +3,9 @@
 
 import { OnEvent } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
+import { getLogger } from '@subql/common';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { getLogger } from '../utils/logger';
 import { delay } from '../utils/promise';
 import {
   IndexerEvent,
@@ -59,13 +59,13 @@ export class BenchmarkService {
   }
 
   @OnEvent(IndexerEvent.BlockProcessing)
-  handleProcessingBlock(blockPayload: ProcessBlockPayload) {
+  handleProcessingBlock(blockPayload: ProcessBlockPayload): void {
     this.currentProcessingHeight = blockPayload.height;
     this.currentProcessingTimestamp = blockPayload.timestamp;
   }
 
   @OnEvent(IndexerEvent.BlockTarget)
-  handleTargetBlock(blockPayload: TargetBlockPayload) {
+  handleTargetBlock(blockPayload: TargetBlockPayload): void {
     this.targetHeight = blockPayload.height;
   }
 }

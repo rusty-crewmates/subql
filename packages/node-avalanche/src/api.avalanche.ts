@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'fs';
-import { Interface } from '@ethersproject/abi';
-import { hexDataSlice } from '@ethersproject/bytes';
+import {Interface} from '@ethersproject/abi';
+import {hexDataSlice} from '@ethersproject/bytes';
 import {
   isRuntimeDataSourceV0_3_0,
   RuntimeDataSourceV0_3_0,
+  getLogger,
+  eventToTopic,
+  functionToSighash,
+  hexStringEq,
+  stringNormalizedEq,
 } from '@subql/common';
 import {
   ApiWrapper,
@@ -19,33 +24,29 @@ import {
   AvalancheResult,
   SubqlDatasource,
 } from '@subql/types';
-import { Avalanche } from 'avalanche';
-import { EVMAPI } from 'avalanche/dist/apis/evm';
-import { IndexAPI } from 'avalanche/dist/apis/index';
-import { getLogger } from '../../utils/logger';
-import {
-  eventToTopic,
-  functionToSighash,
-  hexStringEq,
-  stringNormalizedEq,
-} from '../../utils/string';
-import { IndexerSandbox } from '../sandbox.service';
-import { AvalancheOptions } from '../types';
+import {Avalanche} from 'avalanche';
+import {EVMAPI} from 'avalanche/dist/apis/evm';
+import {IndexAPI} from 'avalanche/dist/apis/index';
+
+type AvalancheOptions = {
+  ip: string;
+  port: number;
+  token: string;
+  chainName: string; // XV | XT | C | P
+};
 
 const logger = getLogger('api.avalanche');
 
-async function loadAssets(
-  ds: RuntimeDataSourceV0_3_0,
-): Promise<Record<string, string>> {
+async function loadAssets(ds: RuntimeDataSourceV0_3_0): Promise<Record<string, string>> {
   if (!ds.assets) {
     return {};
   }
 
   const res: Record<string, string> = {};
 
-  for (const [name, { file }] of ds.assets) {
+  for (const [name, {file}] of ds.assets) {
     try {
-      res[name] = await fs.promises.readFile(file, { encoding: 'utf8' });
+      res[name] = await fs.promises.readFile(file, {encoding: 'utf8'});
     } catch (e) {
       throw new Error(`Failed to load datasource asset ${file}`);
     }
@@ -89,11 +90,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
 
   async init(): Promise<void> {
     this.genesisBlock = (
-      await this.cchain.callMethod(
-        'eth_getBlockByNumber',
-        ['0x0', true],
-        '/ext/bc/C/rpc',
-      )
+      await this.cchain.callMethod('eth_getBlockByNumber', ['0x0', true], '/ext/bc/C/rpc')
     ).data.result;
   }
 
@@ -110,19 +107,13 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
   }
 
   async getFinalizedBlockHeight(): Promise<number> {
-    const lastAccepted = await this.indexApi.getLastAccepted(
-      this.encoding,
-      this.baseUrl,
-    );
+    const lastAccepted = await this.indexApi.getLastAccepted(this.encoding, this.baseUrl);
     const finalizedBlockHeight = parseInt(lastAccepted.index);
     return finalizedBlockHeight;
   }
 
   async getLastHeight(): Promise<number> {
-    const lastAccepted = await this.indexApi.getLastAccepted(
-      this.encoding,
-      this.baseUrl,
-    );
+    const lastAccepted = await this.indexApi.getLastAccepted(this.encoding, this.baseUrl);
     const lastHeight = parseInt(lastAccepted.index);
     return lastHeight;
   }
@@ -133,7 +124,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
         const block_promise = this.cchain.callMethod(
           'eth_getBlockByNumber',
           [`0x${num.toString(16)}`, true],
-          '/ext/bc/C/rpc',
+          '/ext/bc/C/rpc'
         );
         const logs_promise = this.cchain.callMethod(
           'eth_getLogs',
@@ -143,24 +134,18 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
               toBlock: `0x${num.toString(16)}`,
             },
           ],
-          '/ext/bc/C/rpc',
+          '/ext/bc/C/rpc'
         );
-        return new AvalancheBlockWrapped(
-          (await block_promise).data.result,
-          (await logs_promise).data.result,
-        );
-      }),
+        return new AvalancheBlockWrapped((await block_promise).data.result, (await logs_promise).data.result);
+      })
     );
   }
 
-  freezeApi(processor: IndexerSandbox): void {
+  freezeApi(processor: any): void {
     processor.freeze(this.client, 'api');
   }
 
-  private buildInterface(
-    abiName: string,
-    assets: Record<string, string>,
-  ): Interface | undefined {
+  private buildInterface(abiName: string, assets: Record<string, string>): Interface | undefined {
     if (!assets[abiName]) {
       throw new Error(`ABI named "${abiName}" not referenced in assets`);
     }
@@ -191,7 +176,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
 
   async parseEvent<T extends AvalancheResult = AvalancheResult>(
     event: AvalancheEvent,
-    ds: RuntimeDataSourceV0_3_0,
+    ds: RuntimeDataSourceV0_3_0
   ): Promise<AvalancheEvent<T>> {
     try {
       if (!ds?.options?.abi) {
@@ -212,7 +197,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
 
   async parseTransaction<T extends AvalancheResult = AvalancheResult>(
     transaction: AvalancheTransaction,
-    ds: RuntimeDataSourceV0_3_0,
+    ds: RuntimeDataSourceV0_3_0
   ): Promise<AvalancheTransaction<T>> {
     try {
       if (!ds?.options?.abi) {
@@ -225,7 +210,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
         ...transaction,
         args: iface?.decodeFunctionData(
           iface.getFunction(hexDataSlice(transaction.input, 0, 4)),
-          transaction.input,
+          transaction.input
         ) as T,
       };
     } catch (e) {
@@ -236,10 +221,7 @@ export class AvalancheApi implements ApiWrapper<AvalancheBlockWrapper> {
 }
 
 export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
-  constructor(
-    private _block: AvalancheBlock,
-    private _logs: AvalancheEvent[],
-  ) {}
+  constructor(private _block: AvalancheBlock, private _logs: AvalancheEvent[]) {}
 
   get block(): AvalancheBlock {
     return this._block;
@@ -253,10 +235,7 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
     return this.block.hash;
   }
 
-  calls(
-    filter?: AvalancheCallFilter,
-    ds?: SubqlDatasource,
-  ): AvalancheTransaction[] {
+  calls(filter?: AvalancheCallFilter, ds?: SubqlDatasource): AvalancheTransaction[] {
     if (!filter) {
       return this.block.transactions;
     }
@@ -266,15 +245,10 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
       address = ds?.options?.address;
     }
 
-    return this.block.transactions.filter((t) =>
-      this.filterCallProcessor(t, filter, address),
-    );
+    return this.block.transactions.filter((t) => this.filterCallProcessor(t, filter, address));
   }
 
-  events(
-    filter?: AvalancheEventFilter,
-    ds?: SubqlDatasource,
-  ): AvalancheEvent[] {
+  events(filter?: AvalancheEventFilter, ds?: SubqlDatasource): AvalancheEvent[] {
     if (!filter) {
       return this._logs;
     }
@@ -284,15 +258,13 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
       address = ds?.options?.address;
     }
 
-    return this._logs.filter((log) =>
-      this.filterEventsProcessor(log, filter, address),
-    );
+    return this._logs.filter((log) => this.filterEventsProcessor(log, filter, address));
   }
 
   private filterCallProcessor(
     transaction: AvalancheTransaction,
     filter: AvalancheCallFilter,
-    address?: string,
+    address?: string
   ): boolean {
     if (filter.to && !stringNormalizedEq(filter.to, transaction.to)) {
       return false;
@@ -305,21 +277,14 @@ export class AvalancheBlockWrapped implements AvalancheBlockWrapper {
       return false;
     }
 
-    if (
-      filter.function &&
-      transaction.input.indexOf(functionToSighash(filter.function)) !== 0
-    ) {
+    if (filter.function && transaction.input.indexOf(functionToSighash(filter.function)) !== 0) {
       return false;
     }
 
     return true;
   }
 
-  private filterEventsProcessor(
-    log: AvalancheEvent,
-    filter: AvalancheEventFilter,
-    address?: string,
-  ): boolean {
+  private filterEventsProcessor(log: AvalancheEvent, filter: AvalancheEventFilter, address?: string): boolean {
     if (address && !stringNormalizedEq(address, log.address)) {
       return false;
     }

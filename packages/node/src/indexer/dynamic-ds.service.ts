@@ -3,10 +3,10 @@
 
 import assert from 'assert';
 import { Injectable } from '@nestjs/common';
+import { getLogger } from '@subql/common';
 import { isCustomDs, isRuntimeDs } from '@subql/common-substrate';
 import { Transaction } from 'sequelize/types';
 import { SubqlProjectDs, SubqueryProject } from '../configure/SubqueryProject';
-import { getLogger } from '../utils/logger';
 import { DsProcessorService } from './ds-processor.service';
 import { MetadataRepo } from './entities/Metadata.entity';
 

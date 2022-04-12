@@ -10,6 +10,9 @@
   "references": [
     { "path": "../common" },
     { "path": "../common-substrate" },
+    { "path": "../node-algorand" },
+    { "path": "../node-avalanche" },
+    { "path": "../node-substrate" },
     { "path": "../types" }
   ],
   "include": ["src/**/*"]

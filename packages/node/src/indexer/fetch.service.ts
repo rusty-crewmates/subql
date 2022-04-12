@@ -5,6 +5,7 @@ import { getHeapStatistics } from 'v8';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
+import { ApiService, getYargsOption, getLogger } from '@subql/common';
 import {
   isRuntimeDataSourceV0_2_0,
   RuntimeDataSourceV0_0_1,
@@ -26,11 +27,8 @@ import {
 import { isUndefined, range, sortBy, uniqBy } from 'lodash';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
-import { getLogger } from '../utils/logger';
 import { isBaseHandler, isCustomHandler } from '../utils/project';
 import { delay } from '../utils/promise';
-import { getYargsOption } from '../yargs';
-import { ApiService } from './api.service.base';
 import { BlockedQueue } from './BlockedQueue';
 import { Dictionary, DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
@@ -225,7 +223,6 @@ export class FetchService implements OnApplicationShutdown {
             await next(block);
             success = true;
           } catch (e) {
-            console.log(e);
             logger.error(
               e,
               `failed to index block at height ${block.blockHeight} ${

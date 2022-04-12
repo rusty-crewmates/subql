@@ -3,6 +3,8 @@
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiOptions } from '@polkadot/api/types';
+import { ApiService } from '@subql/common';
+import { SubstrateApiService } from '@subql/node-substrate';
 import {
   BlockWrapper,
   SubqlDatasourceKind,
@@ -12,11 +14,9 @@ import {
 import { GraphQLSchema } from 'graphql';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
-import { ApiService } from './api.service.base';
 import { DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { FetchService } from './fetch.service';
-import { SubstrateApiService } from './substrate/api.service.substrate';
 
 function testSubqueryProject(): SubqueryProject {
   return {

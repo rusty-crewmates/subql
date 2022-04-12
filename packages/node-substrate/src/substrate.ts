@@ -1,16 +1,11 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiPromise } from '@polkadot/api';
-import { Option, Vec } from '@polkadot/types';
+import {ApiPromise} from '@polkadot/api';
+import {Option, Vec} from '@polkadot/types';
 import '@polkadot/api-augment/substrate';
-import {
-  BlockHash,
-  EventRecord,
-  LastRuntimeUpgradeInfo,
-  RuntimeVersion,
-  SignedBlock,
-} from '@polkadot/types/interfaces';
+import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
+import {getLogger} from '@subql/common';
 import {
   SpecVersionRange,
   SubqlBlockFilter,
@@ -20,17 +15,12 @@ import {
   SubstrateEvent,
   SubstrateExtrinsic,
 } from '@subql/types';
-import { last, merge, range } from 'lodash';
-import { SubstrateBlockWrapped } from '../indexer/substrate/api.substrate';
-import { getLogger } from './logger';
+import {last, merge, range} from 'lodash';
+import {SubstrateBlockWrapped} from './api.substrate';
 
 const logger = getLogger('fetch');
 
-export function wrapBlock(
-  signedBlock: SignedBlock,
-  events: EventRecord[],
-  specVersion?: number,
-): SubstrateBlock {
+export function wrapBlock(signedBlock: SignedBlock, events: EventRecord[], specVersion?: number): SubstrateBlock {
   return merge(signedBlock, {
     timestamp: getTimestamp(signedBlock),
     specVersion: specVersion,
@@ -38,10 +28,10 @@ export function wrapBlock(
   });
 }
 
-function getTimestamp({ block: { extrinsics } }: SignedBlock): Date {
+function getTimestamp({block: {extrinsics}}: SignedBlock): Date {
   for (const e of extrinsics) {
     const {
-      method: { method, section },
+      method: {method, section},
     } = e;
     if (section === 'timestamp' && method === 'set') {
       const date = new Date(e.args[0].toJSON() as number);
@@ -53,10 +43,7 @@ function getTimestamp({ block: { extrinsics } }: SignedBlock): Date {
   }
 }
 
-export function wrapExtrinsics(
-  wrappedBlock: SubstrateBlock,
-  allEvents: EventRecord[],
-): SubstrateExtrinsic[] {
+export function wrapExtrinsics(wrappedBlock: SubstrateBlock, allEvents: EventRecord[]): SubstrateExtrinsic[] {
   return wrappedBlock.block.extrinsics.map((extrinsic, idx) => {
     const events = filterExtrinsicEvents(idx, allEvents);
     return {
@@ -70,29 +57,21 @@ export function wrapExtrinsics(
 }
 
 function getExtrinsicSuccess(events: EventRecord[]): boolean {
-  return (
-    events.findIndex((evt) => evt.event.method === 'ExtrinsicSuccess') > -1
-  );
+  return events.findIndex((evt) => evt.event.method === 'ExtrinsicSuccess') > -1;
 }
 
-function filterExtrinsicEvents(
-  extrinsicIdx: number,
-  events: EventRecord[],
-): EventRecord[] {
-  return events.filter(
-    ({ phase }) =>
-      phase.isApplyExtrinsic && phase.asApplyExtrinsic.eqn(extrinsicIdx),
-  );
+function filterExtrinsicEvents(extrinsicIdx: number, events: EventRecord[]): EventRecord[] {
+  return events.filter(({phase}) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eqn(extrinsicIdx));
 }
 
 export function wrapEvents(
   extrinsics: SubstrateExtrinsic[],
   events: EventRecord[],
-  block: SubstrateBlock,
+  block: SubstrateBlock
 ): SubstrateEvent[] {
   return events.reduce((acc, event, idx) => {
-    const { phase } = event;
-    const wrappedEvent: SubstrateEvent = merge(event, { idx, block });
+    const {phase} = event;
+    const wrappedEvent: SubstrateEvent = merge(event, {idx, block});
     if (phase.isApplyExtrinsic) {
       wrappedEvent.extrinsic = extrinsics[phase.asApplyExtrinsic.toNumber()];
     }
@@ -101,23 +80,15 @@ export function wrapEvents(
   }, [] as SubstrateEvent[]);
 }
 
-function checkSpecRange(
-  specVersionRange: SpecVersionRange,
-  specVersion: number,
-) {
+function checkSpecRange(specVersionRange: SpecVersionRange, specVersion: number) {
   const [lowerBond, upperBond] = specVersionRange;
   return (
-    (lowerBond === undefined ||
-      lowerBond === null ||
-      specVersion >= lowerBond) &&
+    (lowerBond === undefined || lowerBond === null || specVersion >= lowerBond) &&
     (upperBond === undefined || upperBond === null || specVersion <= upperBond)
   );
 }
 
-export function filterBlock(
-  block: SubstrateBlock,
-  filter?: SubqlBlockFilter,
-): SubstrateBlock | undefined {
+export function filterBlock(block: SubstrateBlock, filter?: SubqlBlockFilter): SubstrateBlock | undefined {
   if (!filter) return block;
   return filter.specVersion === undefined ||
     block.specVersion === undefined ||
@@ -128,60 +99,47 @@ export function filterBlock(
 
 export function filterExtrinsics(
   extrinsics: SubstrateExtrinsic[],
-  filterOrFilters: SubqlCallFilter | SubqlCallFilter[] | undefined,
+  filterOrFilters: SubqlCallFilter | SubqlCallFilter[] | undefined
 ): SubstrateExtrinsic[] {
-  if (
-    !filterOrFilters ||
-    (filterOrFilters instanceof Array && filterOrFilters.length === 0)
-  ) {
+  if (!filterOrFilters || (filterOrFilters instanceof Array && filterOrFilters.length === 0)) {
     return extrinsics;
   }
-  const filters =
-    filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
-  return extrinsics.filter(({ block, extrinsic, success }) =>
+  const filters = filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
+  return extrinsics.filter(({block, extrinsic, success}) =>
     filters.find(
       (filter) =>
         (filter.specVersion === undefined ||
           block.specVersion === undefined ||
           checkSpecRange(filter.specVersion, block.specVersion)) &&
-        (filter.module === undefined ||
-          extrinsic.method.section === filter.module) &&
-        (filter.method === undefined ||
-          extrinsic.method.method === filter.method) &&
-        (filter.success === undefined || success === filter.success),
-    ),
+        (filter.module === undefined || extrinsic.method.section === filter.module) &&
+        (filter.method === undefined || extrinsic.method.method === filter.method) &&
+        (filter.success === undefined || success === filter.success)
+    )
   );
 }
 
 export function filterEvents(
   events: SubstrateEvent[],
-  filterOrFilters?: SubqlEventFilter | SubqlEventFilter[] | undefined,
+  filterOrFilters?: SubqlEventFilter | SubqlEventFilter[] | undefined
 ): SubstrateEvent[] {
-  if (
-    !filterOrFilters ||
-    (filterOrFilters instanceof Array && filterOrFilters.length === 0)
-  ) {
+  if (!filterOrFilters || (filterOrFilters instanceof Array && filterOrFilters.length === 0)) {
     return events;
   }
-  const filters =
-    filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
-  return events.filter(({ block, event }) =>
+  const filters = filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
+  return events.filter(({block, event}) =>
     filters.find(
       (filter) =>
         (filter.specVersion === undefined ||
           block.specVersion === undefined ||
           checkSpecRange(filter.specVersion, block.specVersion)) &&
         (filter.module ? event.section === filter.module : true) &&
-        (filter.method ? event.method === filter.method : true),
-    ),
+        (filter.method ? event.method === filter.method : true)
+    )
   );
 }
 
 // TODO: prefetch all known runtime upgrades at once
-export async function prefetchMetadata(
-  api: ApiPromise,
-  hash: BlockHash,
-): Promise<void> {
+export async function prefetchMetadata(api: ApiPromise, hash: BlockHash): Promise<void> {
   await api.getBlockRegistry(hash);
 }
 
@@ -196,38 +154,30 @@ export async function fetchBlocks(
   api: ApiPromise,
   startHeight: number,
   endHeight: number,
-  overallSpecVer?: number,
+  overallSpecVer?: number
 ): Promise<SubstrateBlockWrapped[]> {
   const blocks = await fetchBlocksRange(api, startHeight, endHeight);
   const blockHashs = blocks.map((b) => b.block.header.hash);
   const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
     fetchEventsRange(api, blockHashs),
-    overallSpecVer
-      ? undefined
-      : fetchRuntimeVersionRange(api, parentBlockHashs),
+    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];
-    const parentSpecVersion = overallSpecVer
-      ? overallSpecVer
-      : runtimeVersions[idx].specVersion.toNumber();
+    const parentSpecVersion = overallSpecVer ? overallSpecVer : runtimeVersions[idx].specVersion.toNumber();
 
     const wrappedBlock = wrapBlock(block, events.toArray(), parentSpecVersion);
     const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
     const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return new SubstrateBlockWrapped(
-      wrappedBlock,
-      wrappedExtrinsics,
-      wrappedEvents,
-    );
+    return new SubstrateBlockWrapped(wrappedBlock, wrappedExtrinsics, wrappedEvents);
   });
 }
 
 export async function fetchBlocksViaRangeQuery(
   api: ApiPromise,
   startHeight: number,
-  endHeight: number,
+  endHeight: number
 ): Promise<SubstrateBlockWrapped[]> {
   const blocks = await fetchBlocksRange(api, startHeight, endHeight);
   const firstBlockHash = blocks[0].block.header.hash;
@@ -245,25 +195,14 @@ export async function fetchBlocksViaRangeQuery(
     lastEvents = events;
     lastRuntimeUpgrade = runtimeUpgrade;
 
-    const wrappedBlock = wrapBlock(
-      block,
-      events,
-      runtimeUpgrade.unwrap()?.specVersion.toNumber(),
-    );
+    const wrappedBlock = wrapBlock(block, events, runtimeUpgrade.unwrap()?.specVersion.toNumber());
     const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
     const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return new SubstrateBlockWrapped(
-      wrappedBlock,
-      wrappedExtrinsics,
-      wrappedEvents,
-    );
+    return new SubstrateBlockWrapped(wrappedBlock, wrappedExtrinsics, wrappedEvents);
   });
 }
 
-async function getBlockByHeight(
-  api: ApiPromise,
-  height: number,
-): Promise<SignedBlock> {
+async function getBlockByHeight(api: ApiPromise, height: number): Promise<SignedBlock> {
   const blockHash = await api.rpc.chain.getBlockHash(height).catch((e) => {
     logger.error(`failed to fetch BlockHash ${height}`);
     throw e;
@@ -277,56 +216,41 @@ async function getBlockByHeight(
 export async function fetchBlocksRange(
   api: ApiPromise,
   startHeight: number,
-  endHeight: number,
+  endHeight: number
 ): Promise<SignedBlock[]> {
-  return Promise.all(
-    range(startHeight, endHeight + 1).map(async (height) =>
-      getBlockByHeight(api, height),
-    ),
-  );
+  return Promise.all(range(startHeight, endHeight + 1).map(async (height) => getBlockByHeight(api, height)));
 }
 
-export async function fetchBlocksArray(
-  api: ApiPromise,
-  blockArray: number[],
-): Promise<SignedBlock[]> {
-  return Promise.all(
-    blockArray.map(async (height) => getBlockByHeight(api, height)),
-  );
+export async function fetchBlocksArray(api: ApiPromise, blockArray: number[]): Promise<SignedBlock[]> {
+  return Promise.all(blockArray.map(async (height) => getBlockByHeight(api, height)));
 }
 
-export async function fetchEventsRange(
-  api: ApiPromise,
-  hashs: BlockHash[],
-): Promise<Vec<EventRecord>[]> {
+export async function fetchEventsRange(api: ApiPromise, hashs: BlockHash[]): Promise<Vec<EventRecord>[]> {
   return Promise.all(
     hashs.map((hash) =>
       api.query.system.events.at(hash).catch((e) => {
         logger.error(`failed to fetch events at block ${hash}`);
         throw e;
-      }),
-    ),
+      })
+    )
   );
 }
 
-export async function fetchRuntimeVersionRange(
-  api: ApiPromise,
-  hashs: BlockHash[],
-): Promise<RuntimeVersion[]> {
+export async function fetchRuntimeVersionRange(api: ApiPromise, hashs: BlockHash[]): Promise<RuntimeVersion[]> {
   return Promise.all(
     hashs.map((hash) =>
       api.rpc.state.getRuntimeVersion(hash).catch((e) => {
         logger.error(`failed to fetch RuntimeVersion at block ${hash}`);
         throw e;
-      }),
-    ),
+      })
+    )
   );
 }
 
 export async function fetchBlocksBatches(
   api: ApiPromise,
   blockArray: number[],
-  overallSpecVer?: number,
+  overallSpecVer?: number
   // specVersionMap?: number[],
 ): Promise<SubstrateBlockWrapped[]> {
   const blocks = await fetchBlocksArray(api, blockArray);
@@ -334,22 +258,14 @@ export async function fetchBlocksBatches(
   const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
     fetchEventsRange(api, blockHashs),
-    overallSpecVer
-      ? undefined
-      : fetchRuntimeVersionRange(api, parentBlockHashs),
+    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];
-    const parentSpecVersion = overallSpecVer
-      ? overallSpecVer
-      : runtimeVersions[idx].specVersion.toNumber();
+    const parentSpecVersion = overallSpecVer ? overallSpecVer : runtimeVersions[idx].specVersion.toNumber();
     const wrappedBlock = wrapBlock(block, events.toArray(), parentSpecVersion);
     const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
     const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return new SubstrateBlockWrapped(
-      wrappedBlock,
-      wrappedExtrinsics,
-      wrappedEvents,
-    );
+    return new SubstrateBlockWrapped(wrappedBlock, wrappedExtrinsics, wrappedEvents);
   });
 }

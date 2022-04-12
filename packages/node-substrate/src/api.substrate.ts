@@ -1,22 +1,13 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiPromise, HttpProvider, WsProvider } from '@polkadot/api';
-import {
-  ApiInterfaceEvents,
-  ApiOptions,
-  DecoratedRpc,
-  RpcMethodResult,
-} from '@polkadot/api/types';
-import { RpcInterface } from '@polkadot/rpc-core/types';
-import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
-import {
-  AnyFunction,
-  DefinitionRpcExt,
-  RegisteredTypes,
-} from '@polkadot/types/types';
-import { ProjectNetworkConfig } from '@subql/common';
+import {EventEmitter2} from '@nestjs/event-emitter';
+import {ApiPromise, HttpProvider, WsProvider} from '@polkadot/api';
+import {ApiInterfaceEvents, ApiOptions, DecoratedRpc, RpcMethodResult} from '@polkadot/api/types';
+import {RpcInterface} from '@polkadot/rpc-core/types';
+import {BlockHash, RuntimeVersion} from '@polkadot/types/interfaces';
+import {AnyFunction, DefinitionRpcExt, RegisteredTypes} from '@polkadot/types/types';
+import {getYargsOption, profiler, profilerWrap, ProjectNetworkConfig} from '@subql/common';
 import {
   SubstrateBlock,
   ApiWrapper,
@@ -25,13 +16,10 @@ import {
   SubstrateEvent,
   SubqlCallFilter,
   SubqlEventFilter,
+  IndexerEvent,
+  ApiAt,
 } from '@subql/types';
-import { profiler, profilerWrap } from '../../utils/profiler';
-import * as SubstrateUtil from '../../utils/substrate';
-import { getYargsOption } from '../../yargs';
-import { IndexerEvent } from '../events';
-import { IndexerSandbox } from '../sandbox.service';
-import { ApiAt } from '../types';
+import * as SubstrateUtil from './substrate';
 
 const NOT_SUPPORT = (name: string) => () => {
   throw new Error(`${name}() is not supported`);
@@ -48,7 +36,7 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
   constructor(
     network: Partial<ProjectNetworkConfig>,
     chainTypes: RegisteredTypes,
-    private eventEmitter: EventEmitter2,
+    private eventEmitter: EventEmitter2
   ) {
     let provider: WsProvider | HttpProvider;
     let throwOnConnect = false;
@@ -70,13 +58,13 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
   async init(): Promise<void> {
     this.client = await ApiPromise.create(this.options);
 
-    this.eventEmitter.emit(IndexerEvent.ApiConnected, { value: 1 });
+    this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 1});
 
     this.client.on('connected', () => {
-      this.eventEmitter.emit(IndexerEvent.ApiConnected, { value: 1 });
+      this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 1});
     });
     this.client.on('disconnected', () => {
-      this.eventEmitter.emit(IndexerEvent.ApiConnected, { value: 0 });
+      this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 0});
     });
   }
 
@@ -94,47 +82,34 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
 
   async getFinalizedBlockHeight(): Promise<number> {
     const finalizedBlockHeight = (
-      await this.client.rpc.chain.getBlock(
-        await this.client.rpc.chain.getFinalizedHead(),
-      )
+      await this.client.rpc.chain.getBlock(await this.client.rpc.chain.getFinalizedHead())
     ).block.header.number.toNumber();
     return finalizedBlockHeight;
   }
 
   async getLastHeight(): Promise<number> {
-    const lastHeight = (
-      await this.client.rpc.chain.getHeader()
-    ).number.toNumber();
+    const lastHeight = (await this.client.rpc.chain.getHeader()).number.toNumber();
     return lastHeight;
   }
 
   async fetchBlocks(bufferBlocks: number[]): Promise<SubstrateBlockWrapper[]> {
-    const { argv } = getYargsOption();
+    const {argv} = getYargsOption();
 
     const fetchBlocksProfiled = argv.profiler
-      ? profilerWrap(
-          SubstrateUtil.fetchBlocksBatches,
-          'SubstrateUtil',
-          'fetchBlocksBatches',
-        )
+      ? profilerWrap(SubstrateUtil.fetchBlocksBatches, 'SubstrateUtil', 'fetchBlocksBatches')
       : SubstrateUtil.fetchBlocksBatches;
 
-    const metadataChanged = await this.fetchMeta(
-      bufferBlocks[bufferBlocks.length - 1],
-    );
+    const metadataChanged = await this.fetchMeta(bufferBlocks[bufferBlocks.length - 1]);
     const blocks = await fetchBlocksProfiled(
       this.client,
       bufferBlocks,
-      metadataChanged ? undefined : this.parentSpecVersion,
+      metadataChanged ? undefined : this.parentSpecVersion
     );
     return blocks;
   }
 
-  freezeApi(
-    processor: IndexerSandbox,
-    blockContent: SubstrateBlockWrapped,
-  ): void {
-    const { argv } = getYargsOption();
+  freezeApi(processor: any, blockContent: SubstrateBlockWrapped): void {
+    const {argv} = getYargsOption();
 
     processor.freeze(this.getPatchedApiSandbox(blockContent), 'api');
     if (argv.unsafe) {
@@ -146,39 +121,25 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
   /*           SUBSTRATE SPECIFIC METHODS             */
   /****************************************************/
 
-  async getPatchedApi(
-    blockHash: string | BlockHash,
-    blockNumber: number,
-    parentBlockHash?: BlockHash,
-  ): Promise<ApiAt> {
+  async getPatchedApi(blockHash: string | BlockHash, blockNumber: number, parentBlockHash?: BlockHash): Promise<ApiAt> {
     this.currentBlockHash = blockHash.toString();
     this.currentBlockNumber = blockNumber;
     if (parentBlockHash) {
-      this.currentRuntimeVersion =
-        await this.client.rpc.state.getRuntimeVersion(parentBlockHash);
+      this.currentRuntimeVersion = await this.client.rpc.state.getRuntimeVersion(parentBlockHash);
     }
-    const apiAt = (await this.client.at(
-      blockHash,
-      this.currentRuntimeVersion,
-    )) as ApiAt;
+    const apiAt = (await this.client.at(blockHash, this.currentRuntimeVersion)) as ApiAt;
     this.patchApiRpc(this.client, apiAt);
     return apiAt;
   }
 
-  async getPatchedApiSandbox(
-    blockContent: SubstrateBlockWrapped,
-  ): Promise<ApiAt> {
-    const { blockHeight, hash, parentHash, specVersion } = blockContent;
+  async getPatchedApiSandbox(blockContent: SubstrateBlockWrapped): Promise<ApiAt> {
+    const {blockHeight, hash, parentHash, specVersion} = blockContent;
     this.currentBlockHash = hash;
     this.currentBlockNumber = blockHeight;
     if (this.parentSpecVersion !== specVersion) {
-      this.currentRuntimeVersion =
-        await this.client.rpc.state.getRuntimeVersion(parentHash);
+      this.currentRuntimeVersion = await this.client.rpc.state.getRuntimeVersion(parentHash);
     }
-    const apiAt = (await this.client.at(
-      hash,
-      this.currentRuntimeVersion,
-    )) as ApiAt;
+    const apiAt = (await this.client.at(hash, this.currentRuntimeVersion)) as ApiAt;
     this.patchApiRpc(this.client, apiAt);
     return apiAt;
   }
@@ -197,35 +158,29 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
 
   private patchApiRpc(api: ApiPromise, apiAt: ApiAt): void {
     apiAt.rpc = Object.entries(api.rpc).reduce((acc, [module, rpcMethods]) => {
-      acc[module as keyof DecoratedRpc<'promise', RpcInterface>] =
-        Object.entries(rpcMethods).reduce(
-          (accInner, [name, rpcPromiseResult]) => {
-            accInner[name] = this.redecorateRpcFunction(rpcPromiseResult);
-            return accInner;
-          },
-          {} as any,
-        );
+      acc[module as keyof DecoratedRpc<'promise', RpcInterface>] = Object.entries(rpcMethods).reduce(
+        (accInner, [name, rpcPromiseResult]) => {
+          accInner[name] = this.redecorateRpcFunction(rpcPromiseResult);
+          return accInner;
+        },
+        {} as any
+      );
       return acc;
     }, {} as ApiPromise['rpc']);
   }
 
   private redecorateRpcFunction<T extends 'promise' | 'rxjs'>(
-    original: RpcMethodResult<T, AnyFunction>,
+    original: RpcMethodResult<T, AnyFunction>
   ): RpcMethodResult<T, AnyFunction> {
     const methodName = this.getRPCFunctionName(original);
     if (original.meta.params) {
-      const hashIndex = original.meta.params.findIndex(
-        ({ isHistoric }) => isHistoric,
-      );
+      const hashIndex = original.meta.params.findIndex(({isHistoric}) => isHistoric);
       if (hashIndex > -1) {
-        const isBlockNumber =
-          original.meta.params[hashIndex].type === 'BlockNumber';
+        const isBlockNumber = original.meta.params[hashIndex].type === 'BlockNumber';
 
         const ret = ((...args: any[]) => {
           const argsClone = [...args];
-          argsClone[hashIndex] = isBlockNumber
-            ? this.currentBlockNumber
-            : this.currentBlockHash;
+          argsClone[hashIndex] = isBlockNumber ? this.currentBlockNumber : this.currentBlockHash;
           return original(...argsClone);
         }) as RpcMethodResult<T, AnyFunction>;
         ret.raw = NOT_SUPPORT(`${methodName}.raw`);
@@ -234,18 +189,13 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
       }
     }
 
-    const ret = NOT_SUPPORT(methodName) as unknown as RpcMethodResult<
-      T,
-      AnyFunction
-    >;
+    const ret = NOT_SUPPORT(methodName) as unknown as RpcMethodResult<T, AnyFunction>;
     ret.raw = NOT_SUPPORT(`${methodName}.raw`);
     ret.meta = original.meta;
     return ret;
   }
 
-  private getRPCFunctionName<T extends 'promise' | 'rxjs'>(
-    original: RpcMethodResult<T, AnyFunction>,
-  ): string {
+  private getRPCFunctionName<T extends 'promise' | 'rxjs'>(original: RpcMethodResult<T, AnyFunction>): string {
     const ext = original.meta as unknown as DefinitionRpcExt;
 
     return `api.rpc.${ext?.section ?? '*'}.${ext?.method ?? '*'}`;
@@ -254,9 +204,7 @@ export class SubstrateApi implements ApiWrapper<SubstrateBlockWrapper> {
   @profiler(getYargsOption().argv.profiler)
   private async fetchMeta(height: number): Promise<boolean> {
     const blockHash = await this.client.rpc.chain.getBlockHash(height);
-    const runtimeVersion = await this.client.rpc.state.getRuntimeVersion(
-      blockHash,
-    );
+    const runtimeVersion = await this.client.rpc.state.getRuntimeVersion(blockHash);
     const specVersion = runtimeVersion.specVersion.toNumber();
     if (this.parentSpecVersion !== specVersion) {
       await this.client.getBlockRegistry(blockHash);
@@ -271,7 +219,7 @@ export class SubstrateBlockWrapped implements SubstrateBlockWrapper {
   constructor(
     private _block: SubstrateBlock,
     private _extrinsics: SubstrateExtrinsic[],
-    private _events: SubstrateEvent[],
+    private _events: SubstrateEvent[]
   ) {}
 
   get block(): SubstrateBlock {

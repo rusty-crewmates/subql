@@ -3,6 +3,8 @@
 
 import path from 'path';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ApiService } from '@subql/common';
+import { fetchBlocksBatches } from '@subql/node-substrate';
 import {
   BlockWrapper,
   SubqlDatasourceKind,
@@ -12,8 +14,6 @@ import {
 import { GraphQLSchema } from 'graphql';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
-import { fetchBlocksBatches } from '../utils/substrate';
-import { ApiService } from './api.service.base';
 import { Dictionary, DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { FetchService } from './fetch.service';
