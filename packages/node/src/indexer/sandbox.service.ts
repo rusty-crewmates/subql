@@ -3,12 +3,8 @@
 
 import path from 'path';
 import { Injectable } from '@nestjs/common';
-import {
-  levelFilter,
-  ApiService,
-  getYargsOption,
-  getLogger,
-} from '@subql/common';
+import { levelFilter } from '@subql/common';
+import { ApiService, getYargsOption, getLogger } from '@subql/common-node';
 import { isDatasourceV0_2_0 } from '@subql/common-substrate';
 import {
   ApiAt,

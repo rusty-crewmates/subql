@@ -3,7 +3,7 @@
 
 import { Module } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiService } from '@subql/common';
+import { ApiService } from '@subql/common-node';
 import { AlgorandApiService } from '@subql/node-algorand';
 import { AvalancheApiService } from '@subql/node-avalanche';
 import { SubstrateApiService } from '@subql/node-substrate';

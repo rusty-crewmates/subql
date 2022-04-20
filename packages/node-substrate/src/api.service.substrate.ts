@@ -5,7 +5,8 @@ import {Injectable, OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {BlockHash} from '@polkadot/types/interfaces';
 import {RegisteredTypes} from '@polkadot/types/types';
-import {ProjectNetworkConfig, ApiService, getLogger} from '@subql/common';
+import {ProjectNetworkConfig} from '@subql/common';
+import {ApiService, getLogger} from '@subql/common-node';
 import {ApiAt} from '@subql/types';
 import {SubstrateApi} from './api.substrate';
 

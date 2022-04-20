@@ -3,7 +3,7 @@
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiOptions } from '@polkadot/api/types';
-import { ApiService } from '@subql/common';
+import { ApiService } from '@subql/common-node';
 import { SubstrateApiService } from '@subql/node-substrate';
 import {
   BlockWrapper,

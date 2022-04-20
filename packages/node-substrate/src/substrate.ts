@@ -5,7 +5,7 @@ import {ApiPromise} from '@polkadot/api';
 import {Option, Vec} from '@polkadot/types';
 import '@polkadot/api-augment/substrate';
 import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
-import {getLogger} from '@subql/common';
+import {getLogger} from '@subql/common-node';
 import {
   SpecVersionRange,
   SubqlBlockFilter,

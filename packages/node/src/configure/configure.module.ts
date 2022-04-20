@@ -4,13 +4,8 @@
 import assert from 'assert';
 import path from 'path';
 import { DynamicModule, Global, Module } from '@nestjs/common';
-import {
-  getProjectRootAndManifest,
-  IPFS_REGEX,
-  getYargsOption,
-  getLogger,
-  setLevel,
-} from '@subql/common';
+import { getProjectRootAndManifest, IPFS_REGEX } from '@subql/common';
+import { getYargsOption, getLogger, setLevel } from '@subql/common-node';
 import { SubstrateProjectNetworkConfig } from '@subql/common-substrate';
 import { camelCase, last, omitBy, isNil } from 'lodash';
 import { IConfig, MinConfig, NodeConfig } from './NodeConfig';

@@ -1,5 +1,5 @@
 {
-  "name": "@subql/node-algorand",
+  "name": "@subql/common-node",
   "version": "0.14.0",
   "description": "",
   "homepage": "https://github.com/subquery/subql",
@@ -17,7 +17,6 @@
   ],
   "dependencies": {
     "@subql/common": "workspace:*",
-    "@subql/common-node": "workspace:*",
     "@subql/types": "workspace:*"
   }
 }

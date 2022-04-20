@@ -4,7 +4,7 @@
 import fs from 'fs';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { u8aToHex, u8aEq } from '@polkadot/util';
-import { getLogger } from '@subql/common';
+import { getLogger } from '@subql/common-node';
 import {
   MMR,
   FileBasedDb,

@@ -3,7 +3,7 @@
 
 import { OnEvent } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
-import { getLogger } from '@subql/common';
+import { getLogger } from '@subql/common-node';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { delay } from '../utils/promise';

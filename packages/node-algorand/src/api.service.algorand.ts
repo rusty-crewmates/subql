@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {Injectable} from '@nestjs/common';
-import {ProjectNetworkConfig, ApiService, getLogger} from '@subql/common';
+import {ProjectNetworkConfig} from '@subql/common';
+import {ApiService, getLogger} from '@subql/common-node';
 import {AlgorandApi} from './api.algorand';
 
 const logger = getLogger('api');

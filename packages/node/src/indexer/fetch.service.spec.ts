@@ -3,7 +3,7 @@
 
 import path from 'path';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiService } from '@subql/common';
+import { ApiService } from '@subql/common-node';
 import { fetchBlocksBatches } from '@subql/node-substrate';
 import {
   BlockWrapper,

@@ -4095,6 +4095,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@subql/common-node@workspace:*, @subql/common-node@workspace:packages/common-node":
+  version: 0.0.0-use.local
+  resolution: "@subql/common-node@workspace:packages/common-node"
+  dependencies:
+    "@subql/common": "workspace:*"
+    "@subql/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@subql/common-substrate@workspace:*, @subql/common-substrate@workspace:packages/common-substrate":
   version: 0.0.0-use.local
   resolution: "@subql/common-substrate@workspace:packages/common-substrate"
@@ -4189,6 +4198,7 @@ __metadata:
   resolution: "@subql/node-algorand@workspace:packages/node-algorand"
   dependencies:
     "@subql/common": "workspace:*"
+    "@subql/common-node": "workspace:*"
     "@subql/types": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -4198,6 +4208,7 @@ __metadata:
   resolution: "@subql/node-avalanche@workspace:packages/node-avalanche"
   dependencies:
     "@subql/common": "workspace:*"
+    "@subql/common-node": "workspace:*"
     "@subql/types": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -4207,6 +4218,7 @@ __metadata:
   resolution: "@subql/node-substrate@workspace:packages/node-substrate"
   dependencies:
     "@subql/common": "workspace:*"
+    "@subql/common-node": "workspace:*"
     "@subql/types": "workspace:*"
   languageName: unknown
   linkType: soft
@@ -4275,6 +4287,7 @@ __metadata:
     "@nestjs/testing": ^8.2.6
     "@polkadot/api": 7.12.1
     "@subql/common": "workspace:*"
+    "@subql/common-node": "workspace:*"
     "@subql/common-substrate": "workspace:*"
     "@subql/types": "workspace:*"
     "@subql/x-merkle-mountain-range": 2.0.0-0.1.1

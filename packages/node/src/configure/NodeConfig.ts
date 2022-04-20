@@ -4,7 +4,8 @@
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
-import { loadFromJsonOrYaml, getLogger } from '@subql/common';
+import { loadFromJsonOrYaml } from '@subql/common';
+import { getLogger } from '@subql/common-node';
 import { last } from 'lodash';
 import { LevelWithSilent } from 'pino';
 import { assign } from '../utils/object';

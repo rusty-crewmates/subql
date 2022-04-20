@@ -7,12 +7,12 @@ import {hexDataSlice} from '@ethersproject/bytes';
 import {
   isRuntimeDataSourceV0_3_0,
   RuntimeDataSourceV0_3_0,
-  getLogger,
   eventToTopic,
   functionToSighash,
   hexStringEq,
   stringNormalizedEq,
 } from '@subql/common';
+import {getLogger} from '@subql/common-node';
 import {
   ApiWrapper,
   AvalancheBlock,

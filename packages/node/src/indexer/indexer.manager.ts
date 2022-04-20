@@ -14,11 +14,13 @@ import {
   isCustomDs,
   isRuntimeDs,
   isRuntimeDataSourceV0_3_0,
+} from '@subql/common';
+import {
   ApiService,
   getLogger,
   getYargsOption,
   profiler,
-} from '@subql/common';
+} from '@subql/common-node';
 import { AvalancheApi } from '@subql/node-avalanche';
 import * as SubstrateUtil from '@subql/node-substrate';
 import { SubstrateApi, SubstrateBlockWrapped } from '@subql/node-substrate';

@@ -7,7 +7,8 @@ import {ApiInterfaceEvents, ApiOptions, DecoratedRpc, RpcMethodResult} from '@po
 import {RpcInterface} from '@polkadot/rpc-core/types';
 import {BlockHash, RuntimeVersion} from '@polkadot/types/interfaces';
 import {AnyFunction, DefinitionRpcExt, RegisteredTypes} from '@polkadot/types/types';
-import {getYargsOption, profiler, profilerWrap, ProjectNetworkConfig} from '@subql/common';
+import {ProjectNetworkConfig} from '@subql/common';
+import {getYargsOption, profiler, profilerWrap} from '@subql/common-node';
 import {
   SubstrateBlock,
   ApiWrapper,

@@ -5,6 +5,6 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "references": [{"path": "../common"}, {"path": "../common-node"}, {"path": "../types"}],
+  "references": [{"path": "../common"}, {"path": "../types"}],
   "include": ["src/**/*"]
 }
