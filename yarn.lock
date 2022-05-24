@@ -4144,6 +4144,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@subql/node-avalanche@workspace:packages/node-avalanche"
   dependencies:
+    "@apollo/client": 3.5.8
+    "@nestjs/common": ^8.2.6
+    "@nestjs/core": ^8.2.6
+    "@nestjs/event-emitter": ^1.0.0
+    "@nestjs/schedule": ^1.0.2
     "@nestjs/schematics": ^8.0.5
     "@nestjs/testing": ^8.2.6
     "@subql/common": dev
@@ -4151,6 +4156,7 @@ __metadata:
     "@subql/common-node": dev
     "@subql/types-avalanche": "workspace:*"
     "@subql/utils": 0.1.0
+    "@subql/x-merkle-mountain-range": 2.0.0-0.1.1
     "@subql/x-vm2": ^3.9.3-0.1.0
     "@types/app-module-path": ^2.2.0
     "@types/express": ^4.17.13
@@ -4161,10 +4167,19 @@ __metadata:
     "@types/supertest": ^2.0.11
     "@types/tar": ^6.1.1
     "@types/yargs": ^16.0.4
+    "@willsoto/nestjs-prometheus": ^4.4.0
     avalanche: ^3.12.0
+    dayjs: ^1.10.7
     dotenv: ^15.0.1
+    ethers: ^5.6.1
+    lodash: ^4.17.21
+    merkle-tools: ^1.4.1
     nodemon: ^2.0.15
+    prom-client: ^14.0.1
+    sequelize: ^6.15.0
     supertest: ^6.2.2
+    typescript: ^4.4.4
+    yargs: ^16.2.0
   bin:
     subql-node-avalanche: ./bin/run
   languageName: unknown
@@ -4438,6 +4453,21 @@ __metadata:
     package-json-type: ^1.0.3
   languageName: unknown
   linkType: soft
+
+"@subql/x-merkle-mountain-range@npm:2.0.0-0.1.1":
+  version: 2.0.0-0.1.1
+  resolution: "@subql/x-merkle-mountain-range@npm:2.0.0-0.1.1"
+  dependencies:
+    bignumber.js: ^8.1.1
+    buffer: ^5.4.3
+    js-sha3: ^0.8.0
+    level: ^6.0.0
+    rlp: ^2.2.3
+    semaphore-async-await: ^1.5.1
+    sha.js: ^2.4.11
+  checksum: e7286aee9ae657c6952bc7e753253ca80a6f7ce4f12987b4a528b7c8acdedb2e4225484930fb21b2a130a1f11ad95846725de84b18c87ac8cb812b4071cf47c8
+  languageName: node
+  linkType: hard
 
 "@subql/x-merkle-mountain-range@npm:2.0.0-0.1.2":
   version: 2.0.0-0.1.2
@@ -9165,7 +9195,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.5.4":
+"ethers@npm:^5.5.4, ethers@npm:^5.6.1":
   version: 5.6.7
   resolution: "ethers@npm:5.6.7"
   dependencies:

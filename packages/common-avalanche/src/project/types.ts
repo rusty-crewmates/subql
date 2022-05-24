@@ -1,9 +1,8 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {ApiPromise} from '@polkadot/api';
 import {FileReference, BaseDataSource, BaseHandler, IProjectManifest, ProjectNetworkConfig} from '@subql/common';
-import {SubstrateBlock, SubstrateEvent, SubstrateExtrinsic} from '@subql/types-avalanche';
+import {AvalancheBlock, AvalancheLog, AvalancheTransaction} from '@subql/types-avalanche';
 import {RuntimeDataSourceV0_0_1} from '../project/versioned/v0_0_1';
 
 export enum SubstrateDatasourceKind {
@@ -17,9 +16,9 @@ export enum SubstrateHandlerKind {
 }
 
 export type SubstrateRuntimeHandlerInputMap = {
-  [SubstrateHandlerKind.Block]: SubstrateBlock;
-  [SubstrateHandlerKind.Event]: SubstrateEvent;
-  [SubstrateHandlerKind.Call]: SubstrateExtrinsic;
+  [SubstrateHandlerKind.Block]: AvalancheBlock;
+  [SubstrateHandlerKind.Event]: AvalancheLog;
+  [SubstrateHandlerKind.Call]: AvalancheTransaction;
 };
 
 type SubstrateRuntimeFilterMap = {
@@ -109,7 +108,7 @@ export interface HandlerInputTransformer<
   U,
   DS extends SubstrateCustomDataSource = SubstrateCustomDataSource
 > {
-  (original: SubstrateRuntimeHandlerInputMap[T], ds: DS, api: ApiPromise, assets: Record<string, string>): Promise<U>; //  | SubqlBuiltinDataSource
+  (original: SubstrateRuntimeHandlerInputMap[T], ds: DS, api: any, assets: Record<string, string>): Promise<U>; //  | SubqlBuiltinDataSource
 }
 
 ///
@@ -120,7 +119,7 @@ export interface SubstrateDatasourceProcessor<
 > {
   kind: K;
   validate(ds: DS, assets: Record<string, string>): void;
-  dsFilterProcessor(ds: DS, api: ApiPromise): boolean;
+  dsFilterProcessor(ds: DS, api: any): boolean;
   handlerProcessors: {[kind: string]: SecondLayerHandlerProcessor<SubstrateHandlerKind, unknown, unknown, DS>};
 }
 

@@ -1,9 +1,6 @@
 // Copyright 2020-2022 OnFinality Limited authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {ApiPromise} from '@polkadot/api';
-import {ApiDecoration} from '@polkadot/api/types';
-import {AlgorandBlock, AlgorandBlockWrapper, AlgorandEvent, AlgorandTransaction} from './algorand';
 import {
   AvalancheBlock,
   AvalancheBlockWrapper,
@@ -13,13 +10,10 @@ import {
   AvalancheTransaction,
 } from './avalanche';
 import {SubqlCallFilter, SubqlEventFilter} from './project';
-import {SubstrateBlock, SubstrateBlockWrapper, SubstrateEvent, SubstrateExtrinsic} from './substrate';
 
 export interface Entity {
   id: string;
 }
-
-export type ApiAt = ApiDecoration<'promise'> & {rpc: ApiPromise['rpc']};
 
 export type FunctionPropertyNames<T> = {
   [K in keyof T]: T[K] extends Function ? K : never;
@@ -35,12 +29,9 @@ export interface Store {
 }
 
 export interface BlockWrapper<
-  B extends SubstrateBlock | AlgorandBlock | AvalancheBlock = SubstrateBlock | AlgorandBlock | AvalancheBlock,
-  C extends SubstrateExtrinsic | AlgorandTransaction | AvalancheTransaction =
-    | SubstrateExtrinsic
-    | AlgorandTransaction
-    | AvalancheTransaction,
-  E extends SubstrateEvent | AlgorandEvent | AvalancheLog = SubstrateEvent | AlgorandEvent | AvalancheLog,
+  B extends AvalancheBlock = AvalancheBlock,
+  C extends AvalancheTransaction = AvalancheTransaction,
+  E extends AvalancheLog = AvalancheLog,
   CF extends SubqlCallFilter | AvalancheTransactionFilter = SubqlCallFilter | AvalancheTransactionFilter,
   EF extends SubqlEventFilter | AvalancheLogFilter = SubqlEventFilter | AvalancheLogFilter
 > {
@@ -54,9 +45,7 @@ export interface BlockWrapper<
   logs?: (filters?: EF | EF[], ds?: any) => E[];
 }
 
-export interface ApiWrapper<
-  BW extends BlockWrapper = SubstrateBlockWrapper | AvalancheBlockWrapper | AlgorandBlockWrapper
-> {
+export interface ApiWrapper<BW extends BlockWrapper = AvalancheBlockWrapper> {
   init: () => Promise<void>;
   getGenesisHash: () => string;
   getRuntimeChain: () => string;
